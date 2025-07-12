@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 
-const Home = () => {
+export const Home = () => {
     const [profiles, setProfiles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showRequests, setShowRequests] = useState(false);
@@ -161,4 +161,6 @@ const Home = () => {
     );
 };
 
-export default Home;
+
+
+

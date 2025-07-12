@@ -2,14 +2,15 @@
 import { UserProvider } from './Component/Context'
 import {BrowserRouter, Routes,Route} from 'react-router-dom'
 import { SignupForm  } from './Component/SignUp'
+import { Home } from './Component/Home'
 function App() {
-  const [user, setUser] = useState(0)
 
   return (
     <UserProvider  >
       <BrowserRouter>
       <Routes>
-        <Route path='/home' element={<Home/>}/>
+          
+        <Route path='/' element={<Home/>}/>
         <Route path='/signup' element={<SignupForm/>}/>
       </Routes>
       </BrowserRouter>
