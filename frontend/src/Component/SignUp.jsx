@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../Context/AuthContext";  // Adjust if needed
 
+
 export function SignUp() {
   const { signup } = useAuth();
   const navigate = useNavigate();

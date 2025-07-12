@@ -1,20 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext); // ✅ Correct context
+export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get('http://10.177.160.3:3000/api/auth/profile');
+        const res = await axios.get("http://localhost:3000/api/auth/profile");
         if (res.data.success) setUser(res.data.profile);
       } catch {
         setUser(null);
@@ -27,46 +28,40 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (formData) => {
     try {
-      const res = await axios.post('http://10.177.160.3:3000/api/auth/signup', formData);
+      const res = await axios.post("http://localhost:3000/api/auth/signup", formData);
       if (res.data.success) {
         setUser(res.data.user);
         return { success: true };
       }
     } catch (err) {
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Signup failed',
-      };
+      return { success: false, message: err.response?.data?.message || "Signup failed" };
     }
   };
 
   const login = async (formData) => {
     try {
-      const res = await axios.post('http://10.177.160.3:3000/api/auth/login', formData);
+      const res = await axios.post("http://localhost:3000/api/auth/login", formData);
       if (res.data.success) {
         setUser(res.data.user);
         return { success: true };
       }
     } catch (err) {
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Login failed',
-      };
+      return { success: false, message: err.response?.data?.message || "Login failed" };
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post('http://10.177.160.3:3000/api/auth/logout');
+      await axios.post("http://localhost:3000/api/auth/logout");
       setUser(null);
     } catch (err) {
-      console.error('Logout failed', err);
+      console.error("Logout failed", err);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, signup, login, logout, loading, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}

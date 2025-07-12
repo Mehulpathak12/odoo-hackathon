@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext"; // Make sure the path is correct
 
 export const Home = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth();
+
   const [profiles, setProfiles] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,10 @@ export const Home = () => {
     setProfiles(filtered);
   };
 
+  const prof = () =>{
+    navigate("/profile")
+  }
+
   const handleLanguageSearch = () => {
     if (selectedLanguage) {
       const filtered = profiles.filter(profile =>
@@ -79,12 +86,32 @@ export const Home = () => {
             >
               Requests
             </button>
-            <button
-              onClick={() => navigate("/signin")}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-            >
-              Login
-            </button>
+            
+            {isLoggedIn ? (
+              <button
+                onClick={prof}
+                className="px-4 py-2 bg-amber-400 text-white rounded-lg"
+              >
+                Profile
+              </button>
+            ) :( console.log("Hi")
+            )}
+
+            {isLoggedIn ? (
+              <button
+                onClick={logout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/signin")}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+              >
+                Login
+              </button>
+            )}
           </div>
         </div>
       </header>
