@@ -79,7 +79,8 @@ router.post(
   ],
   async (req, res) => {
     const errors = validationResult(req);
-
+    console.log("server running");
+    
     if (!errors.isEmpty()) {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
@@ -224,6 +225,55 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Fetch failed' });
+  }
+})
+router.get('/users/public', async (req, res) => {
+  try {
+    const users = await User.find({ isPublic: true }).select(
+      'name location skillsOffered skillsWanted availability photoUrl _id'
+    );
+
+    const formatted = users.map(user => ({
+      id: user._id,
+      name: user.name,
+      location: user.location || 'Not specified',
+      photoUrl: user.photoUrl || 'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png',
+      skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
+      skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
+      availability: user.availability || ['Not mentioned'],
+      profileUrl: `/users/${user._id}`
+    }));
+
+    res.json({ success: true, users: formatted });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch public users' });
+  }
+});
+// New: Get individual public profile
+router.get('/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || !user.isPublic) {
+      return res.status(404).json({ success: false, message: 'User not found or is private' });
+    }
+
+    res.json({
+      success: true,
+      profile: {
+        name: user.name,
+        location: user.location || 'Not specified',
+        photoUrl: user.photoUrl || 'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png',
+        
+        skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
+        skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
+        availability: user.availability || ['Not mentioned'],
+        profileUrl: `/users/${user._id}`
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to fetch user profile' });
   }
 });
 
