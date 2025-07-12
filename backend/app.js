@@ -11,6 +11,11 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use(cookieParser());
 
+app.use(cors({
+    origin:"http://localhost/5713",
+    credentials: true
+}))
+
 const {home, auth} = require('./routes/index')
 app.use(home)
 app.use("/api",auth)
