@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import './App.css'
+
+import { UserProvider } from './Component/Context'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(0)
 
   return (
-    <>
-      <div className='bg-red-600' >hello</div>
-    </>
+    <UserProvider  >
+
+    </UserProvider>
   )
 }
+
 
 export default App
