@@ -1,8 +1,10 @@
 
 import { UserProvider } from './Component/Context'
 import {BrowserRouter, Routes,Route} from 'react-router-dom'
-import { SignupForm  } from './Component/SignUp'
+import { SignUp  } from './Component/SignUp'
+import { SignIn  } from './Component/SignIn'
 import { Home } from './Component/Home'
+import { Profile } from './Component/Profile'
 function App() {
 
   return (
@@ -11,7 +13,9 @@ function App() {
       <Routes>
           
         <Route path='/' element={<Home/>}/>
-        <Route path='/signup' element={<SignupForm/>}/>
+        <Route path='/signup' element={<SignUp/>}/>
+        <Route path='/signin' element={<SignIn/>}/>
+        <Route path='/profile' element={<Profile/>}/>
       </Routes>
       </BrowserRouter>
 

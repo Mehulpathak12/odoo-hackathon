@@ -1,118 +1,115 @@
-// SignupForm.js
-import React from "react";
 import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
+  Card,
+  CardBody,
+  CardHeader,
+  CardFooter,
   Input,
-  FormErrorMessage,
-  Heading,
-  useColorModeValue
-} from "@chakra-ui/react";
-import { useForm } from "react-hook-form";
+  Checkbox,
+  Button,
+  Typography,
+} from "@material-tailwind/react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-export function SignupForm() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm();
+export function SignUp() {
+  const navigate = useNavigate();
 
-  const onSubmit = (data) => {
-    console.log("Submitted:", data);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    phone: "",
+    agree: false,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    
   };
 
-  const password = watch("password");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  // Optional: set color scheme manually or based on theme
-  const bgColor = useColorModeValue("white", "gray.800");
-  const inputBg = useColorModeValue("white", "gray.700");
+    if (!formData.agree) {
+      setError("You must agree to the terms and privacy policy.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signUpUser({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+      });
+      navigate("/login");
+    } catch (err) {
+      setError(err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Box
-      maxW="400px"
-      mx="auto"
-      mt={10}
-      p={6}
-      borderWidth={1}
-      borderRadius="md"
-      boxShadow="md"
-      bg={bgColor}
-    >
-      <Heading mb={6} fontSize="2xl" textAlign="center">
-        Create Account
-      </Heading>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-100 via-blue-100 to-cyan-100 px-4">
+      <Card className="w-full mt-0 max-w-md backdrop-blur-md bg-white/80 shadow-xl rounded-2xl">
+        <form onSubmit={handleSubmit}>
+          <CardHeader
+            floated={false}
+            shadow={false}
+            className="flex items-center justify-center p-6"
+          >
+            <div className="text-center">
+              <Typography variant="h4" color="blue-gray">
+                Create Your Account
+              </Typography>
+              <Typography color="gray" className="mt-1 text-sm">
+                Join SkillSwap today — Lets Swap!
+              </Typography>
+            </div>
+          </CardHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Name */}
-        <FormControl isInvalid={errors.name} mb={4}>
-          <FormLabel>Name</FormLabel>
-          <Input
-            bg={inputBg}
-            placeholder="Enter your name"
-            {...register("name", { required: "Name is required" })}
-          />
-          <FormErrorMessage>{errors.name?.message}</FormErrorMessage>
-        </FormControl>
+          <CardBody className="flex flex-col gap-5 px-6">
+            <Input label="Full Name" size="lg" name="name" value={formData.name} onChange={handleChange} required />
+            <Input label="Email" size="lg" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            <Input placeholder="Ajmer, Rajasthan" label="Location" size="lg" name="location" value={formData.phone} onChange={handleChange} required />
+            <Input label="Password" size="lg" name="password" type="password" value={formData.password} onChange={handleChange} required />
+            <div className="-ml-2.5">
+              <Checkbox
+                name="agree"
+                label="I agree to the Terms & Privacy"
+                checked={formData.agree}
+                onChange={handleChange}
+              />
+            </div>
+            {error && <Typography color="red" className="text-sm">{error}</Typography>}
+          </CardBody>
 
-        {/* Email */}
-        <FormControl isInvalid={errors.email} mb={4}>
-          <FormLabel>Email</FormLabel>
-          <Input
-            bg={inputBg}
-            type="email"
-            placeholder="Enter your email"
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^\S+@\S+$/i,
-                message: "Invalid email format",
-              },
-            })}
-          />
-          <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
-        </FormControl>
-
-        {/* Password */}
-        <FormControl isInvalid={errors.password} mb={4}>
-          <FormLabel>Password</FormLabel>
-          <Input
-            bg={inputBg}
-            type="password"
-            placeholder="Enter password"
-            {...register("password", {
-              required: "Password is required",
-              minLength: {
-                value: 6,
-                message: "Minimum 6 characters required",
-              },
-            })}
-          />
-          <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
-        </FormControl>
-
-        {/* Confirm Password */}
-        <FormControl isInvalid={errors.confirmPassword} mb={6}>
-          <FormLabel>Confirm Password</FormLabel>
-          <Input
-            bg={inputBg}
-            type="password"
-            placeholder="Re-enter password"
-            {...register("confirmPassword", {
-              required: "Please confirm your password",
-              validate: (value) =>
-                value === password || "Passwords do not match",
-            })}
-          />
-          <FormErrorMessage>{errors.confirmPassword?.message}</FormErrorMessage>
-        </FormControl>
-
-        <Button colorScheme="whiteAlpha" type="submit" width="100%">
-          Register
-        </Button>
-      </form>
-    </Box>
+          <CardFooter className="px-6 pb-6 pt-0">
+            <Button
+              fullWidth
+              className="bg-blue-600 text-white text-base"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? "Signing Up..." : "Sign Up"}
+            </Button>
+            <Typography
+              variant="small"
+              className="mt-4 text-center text-blue-gray-600"
+            >
+              Already have an account?{" "}
+              <Link to="/signin" className="text-blue-600 font-bold hover:underline">
+                Login
+              </Link>
+            </Typography>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
   );
 }

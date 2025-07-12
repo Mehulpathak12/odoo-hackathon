@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-// import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
     const [profiles, setProfiles] = useState([]);
@@ -14,6 +14,8 @@ export const Home = () => {
     const handleToggleRequests = () => {
         
     };
+
+    const navigate = useNavigate();
 
     return (
         <div id="webcrumbs" className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-indigo-100 font-sans">
@@ -41,12 +43,12 @@ export const Home = () => {
                                 placeholder="Search skills..."
                                 className="w-72 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                             />
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
                         </div>
                         <button onClick={handleToggleRequests} className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow">
                             Requests
                         </button>
-                        <button className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow">
+                        <button onClick={() => navigate("/signin")} className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow">
                             Login
                         </button> 
                     </div>
