@@ -2,167 +2,270 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Home = () => {
-    const [profiles, setProfiles] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showRequests, setShowRequests] = useState(false);
-    const [requests, setRequests] = useState([]);
+  const navigate = useNavigate();
+  const [profiles, setProfiles] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showRequests, setShowRequests] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [requestPage, setRequestPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("");
 
-    useEffect(() => {
-        
-    }, []);
+  const profilesPerPage = 6;
+  const requestsPerPage = 3;
 
-    const handleToggleRequests = () => {
-        
-    };
+  useEffect(() => {
+    const dummyProfiles = Array.from({ length: 14 }, (_, i) => ({
+      id: `${i + 1}`,
+      name: `User ${i + 1}`,
+      photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${30 + i}.jpg`,
+      rating: (Math.random() * 2 + 3).toFixed(1),
+      skillsOffered: ["JavaScript", "Python", "C++"],
+      skillsWanted: ["Skill X", "Skill Y"],
+      status: "Pending"
+    }));
 
-    const navigate = useNavigate();
+    const dummyRequests = Array.from({ length: 10 }, (_, i) => ({
+      name: `Requester ${i + 1}`,
+      photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${60 + i}.jpg`,
+      rating: (Math.random() * 2 + 3).toFixed(1),
+      status: i % 3 === 0 ? "Accepted" : i % 3 === 1 ? "Rejected" : "Pending",
+      skillsOffered: ["Skill D", "Skill E"],
+      skillsWanted: ["Skill Z", "Skill W"]
+    }));
 
-    return (
-        <div id="webcrumbs" className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-indigo-100 font-sans">
-            <header className="bg-white shadow border-b border-gray-200 px-8 py-5">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
-                    <h1 className="text-4xl font-extrabold text-indigo-700 tracking-tight">SkillSwap</h1>
-                    <div className="flex items-center space-x-4">
-                        <details className="relative">
-                            <summary className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-                                <span className="material-symbols-outlined text-gray-600">schedule</span>
-                                <span className="text-sm font-medium text-gray-700">Availability</span>
-                                <span className="material-symbols-outlined text-gray-500">expand_more</span>
-                            </summary>
-                            <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                <div className="py-2">
-                                    {["Any Time", "Weekends", "Evenings", "Weekdays"].map(option => (
-                                        <div key={option} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-700">{option}</div>
-                                    ))}
-                                </div>
-                            </div>
-                        </details>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search skills..."
-                                className="w-72 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></span>
-                        </div>
-                        <button onClick={handleToggleRequests} className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow">
-                            Requests
-                        </button>
-                        <button onClick={() => navigate("/signin")} className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow">
-                            Login
-                        </button> 
-                    </div>
-                </div>
-            </header>
+    setProfiles(dummyProfiles);
+    setRequests(dummyRequests);
+    setLoading(false);
+  }, []);
 
-            {showRequests && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
-                        <button className="absolute top-4 right-4 text-gray-500 hover:text-red-500" onClick={() => setShowRequests(false)}>
-                            <span className="material-symbols-outlined">close</span>
-                        </button>
-                        <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Swap Requests</h2>
-                        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-                            {requests.map((req, idx) => (
-                                <div key={idx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
-                                    <div className="flex justify-between items-center">
-                                        <div className="flex items-center gap-4">
-                                            <img src={req.photo || "https://via.placeholder.com/40"} className="w-12 h-12 rounded-full border" alt="user" />
-                                            <div>
-                                                <h3 className="font-semibold text-gray-800">{req.name}</h3>
-                                                <p className="text-sm text-gray-600">Rating: {req.rating || 'N/A'}/5</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-medium text-gray-700">Status: <span className={`font-bold ${req.status === 'Accepted' ? 'text-green-600' : req.status === 'Rejected' ? 'text-red-500' : 'text-yellow-600'}`}>{req.status}</span></p>
-                                            {req.status === 'Pending' && (
-                                                <div className="mt-2 flex space-x-2">
-                                                    <button className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-md">Accept</button>
-                                                    <button className="px-3 py-1 text-xs bg-red-100 text-red-600 rounded-md">Reject</button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="mt-3 text-sm text-gray-700">
-                                        <p><span className="font-semibold">Skills Offered:</span> {req.skillsOffered?.join(', ')}</p>
-                                        <p><span className="font-semibold">Skills Wanted:</span> {req.skillsWanted?.join(', ')}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <main className="max-w-7xl mx-auto px-6 py-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {loading ? (
-                        <p className="text-center col-span-full text-gray-600">Loading profiles...</p>
-                    ) : profiles.length === 0 ? (
-                        <p className="text-center col-span-full text-gray-500">No profiles found.</p>
-                    ) : (
-                        profiles.map((profile, index) => (
-                            <div key={index} className="bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-xl transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <img
-                                            src={profile.photo || "https://via.placeholder.com/64"}
-                                            alt="Profile"
-                                            className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                                        />
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-gray-900">{profile.name}</h3>
-                                            <p className="text-sm text-gray-500">Rating: {profile.rating || 'N/A'}/5</p>
-                                        </div>
-                                    </div>
-                                    <button className="px-5 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-medium shadow">
-                                        Request
-                                    </button>
-                                </div>
-                                <div className="mt-4">
-                                    <p className="text-sm font-medium text-gray-700 mb-1">Skills Offered</p>
-                                    <div className="flex flex-wrap gap-2 mb-3">
-                                        {profile.skillsOffered?.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">{skill}</span>
-                                        ))}
-                                    </div>
-                                    <p className="text-sm font-medium text-gray-700 mb-1">Skills Wanted</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {profile.skillsWanted?.map((skill, i) => (
-                                            <span key={i} className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">{skill}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                <div className="mt-10 flex justify-center">
-                    <nav className="flex items-center space-x-2">
-                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                            <span className="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        {[1, 2, 3, 4].map(num => (
-                            <button
-                                key={num}
-                                className={`px-4 py-2 rounded-lg font-medium ${num === 1 ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-                            >
-                                {num}
-                            </button>
-                        ))}
-                        <span className="px-2 text-gray-400">...</span>
-                        <button className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">12</button>
-                        <button className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg">
-                            <span className="material-symbols-outlined">chevron_right</span>
-                        </button>
-                    </nav>
-                </div>
-            </main>
-        </div>
+  const handleSearch = () => {
+    const filtered = profiles.filter(profile =>
+      profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.skillsOffered.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+    setProfiles(filtered);
+  };
+
+  const handleLanguageSearch = () => {
+    if (selectedLanguage) {
+      const filtered = profiles.filter(profile =>
+        profile.skillsOffered.includes(selectedLanguage)
+      );
+      setProfiles(filtered);
+    }
+  };
+
+  const paginatedProfiles = profiles.slice(
+    (currentPage - 1) * profilesPerPage,
+    currentPage * profilesPerPage
+  );
+
+  const paginatedRequests = requests.slice(
+    (requestPage - 1) * requestsPerPage,
+    requestPage * requestsPerPage
+  );
+
+  return (
+    <div className="min-h-screen w-screen bg-gradient-to-br from-slate-50 to-indigo-100 font-sans">
+      <header className="bg-white shadow border-b border-gray-200 px-8 py-5">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <h1 className="text-4xl font-extrabold text-indigo-700">SkillSwap</h1>
+          <div className="space-x-4">
+            <button
+              onClick={() => setShowRequests((prev) => !prev)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+            >
+              Requests
+            </button>
+            <button
+              onClick={() => navigate("/signin")}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
+            >
+              Login
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="mt-5 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 justify-center">
+        <div className="flex items-center w-full md:w-1/2 rounded-full overflow-hidden border border-gray-300 bg-white shadow-sm">
+          <input
+            type="text"
+            placeholder="Search for users"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-200 font-medium"
+          >
+            Search
+          </button>
+        </div>
+
+        <div className="flex items-center w-full md:w-1/2 rounded-full overflow-hidden border border-gray-300 bg-white shadow-sm">
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="w-full px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Select Language</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="Python">Python</option>
+            <option value="C++">C++</option>
+            <option value="Java">Java</option>
+            <option value="TypeScript">TypeScript</option>
+          </select>
+          <button
+            type="button"
+            onClick={handleLanguageSearch}
+            className="px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-200 font-medium"
+          >
+            Filter
+          </button>
+        </div>
+      </div>
+
+      {showRequests && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
+            <button
+              onClick={() => setShowRequests(false)}
+              className="absolute top-4 right-4 text-gray-600"
+            >
+              ✕
+            </button>
+            <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Swap Requests</h2>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {paginatedRequests.map((req, i) => (
+                <div
+                  key={i}
+                  className="border rounded-lg p-4 bg-gray-50 shadow-sm"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={req.photo}
+                        className="w-12 h-12 rounded-full border"
+                        alt="user"
+                      />
+                      <div>
+                        <h3 className="font-semibold text-gray-800">{req.name}</h3>
+                        <p className="text-sm text-gray-600">Rating: {req.rating}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-700">
+                        Status: <span className={
+                          req.status === "Accepted"
+                            ? "text-green-600"
+                            : req.status === "Rejected"
+                            ? "text-red-500"
+                            : "text-yellow-600"
+                        }>
+                          {req.status}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-sm text-gray-700">
+                    <p><strong>Skills Offered:</strong> {req.skillsOffered.join(", ")}</p>
+                    <p><strong>Skills Wanted:</strong> {req.skillsWanted.join(", ")}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-center mt-4 space-x-2">
+                {Array.from({ length: Math.ceil(requests.length / requestsPerPage) }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setRequestPage(i + 1)}
+                    className={`px-3 py-1 rounded ${requestPage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {loading ? (
+            <p className="text-center col-span-full">Loading profiles...</p>
+          ) : (
+            paginatedProfiles.map((profile) => (
+              <div
+                key={profile.id}
+                onClick={() => navigate(`/profile/${profile.id}`)}
+                className="cursor-pointer bg-white rounded-xl shadow-md border border-gray-200 p-6 hover:shadow-lg transition"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={profile.photo}
+                      className="w-16 h-16 rounded-full border"
+                      alt="Profile"
+                    />
+                    <div>
+                      <h3 className="text-lg font-semibold">{profile.name}</h3>
+                      <p className="text-sm text-gray-500">Rating: {profile.rating}/5</p>
+                    </div>
+                  </div>
+                  <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg">
+                    Request
+                  </button>
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Skills Offered</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {profile.skillsOffered.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">Skills Wanted</p>
+                  <div className="flex flex-wrap gap-2">
+                    {profile.skillsWanted.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="mt-10 flex justify-center space-x-2">
+          {Array.from({ length: Math.ceil(profiles.length / profilesPerPage) }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-4 py-2 rounded-lg font-medium ${
+                currentPage === i + 1
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-600 bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
 };
-
-
-
-

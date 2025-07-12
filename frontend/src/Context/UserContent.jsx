@@ -23,13 +23,13 @@ export function UserProvider({ children, DefaultUser }) {
 // useUser.js
 
 
-export function useUser() {
-  const context = useContext(UserContext);
+// export function useUser() {
+//   const context = useContext(UserContext);
 
-  if (!context) {
-    console.warn("useUser must be used within a UserProvider");
-    return null;
-  }
+//   if (!context) {
+//     console.warn("useUser must be used within a UserProvider");
+//     return null;
+//   }
 
-  return context; // contains user, setUser, updateUser
-}
+//   return context; // contains user, setUser, updateUser
+// }

@@ -1,92 +1,58 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import {
-  Card,
-  CardBody,
-  CardHeader,
-  CardFooter,
-  Input,
-  Checkbox,
-  Button,
-  Typography,
+  Card, CardBody, CardHeader, CardFooter,
+  Input, Checkbox, Button, Typography,
 } from "@material-tailwind/react";
+import { useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";  // adjust path
 
 export function SignIn() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const from = location.state?.from?.pathname || "/";
 
   const handleChange = (e) => {
-    
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const { success, message } = await login(formData);
+    setLoading(false);
+
+    if (success) {
+      navigate(from, { replace: true });
+    } else {
+      setError(message);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-indigo-200 via-blue-200 to-cyan-200 px-4">
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-md shadow-2xl rounded-2xl">
-        <form >
-          <CardHeader
-            floated={false}
-            shadow={false}
-            className="flex items-center justify-center p-6"
-          >
-            <div className="text-center">
-              <Typography variant="h4" color="blue-gray">
-                Welcome to SkillSwap
-              </Typography>
-              <Typography color="gray" className="mt-1 text-sm">
-                Log in to Start Swapping
-              </Typography>
-            </div>
-          </CardHeader>
-
-          <CardBody className="flex flex-col gap-5 px-6">
-            <Input
-              label="Email"
-              size="lg"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Password"
-              size="lg"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            <div className="-ml-2.5">
-              <Checkbox label="Remember Me" />
-            </div>
+    <div className="min-h-screen flex items-center justify-center ...">
+      <Card className="w-full max-w-md bg-white/80 shadow-2xl rounded-2xl">
+        <form onSubmit={handleSubmit}>
+          <CardHeader>…</CardHeader>
+          <CardBody>
+            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
+            <Checkbox label="Remember Me" />
             {error && <Typography color="red">{error}</Typography>}
           </CardBody>
-
-          <CardFooter className="px-6 pb-6 pt-0">
-            <Button
-              fullWidth
-              type="submit"
-              className="bg-blue-600 text-white text-base"
-              disabled={loading}
-            >
+          <CardFooter>
+            <Button type="submit" disabled={loading}>
               {loading ? "Logging in..." : "Sign In"}
             </Button>
-            <Typography
-              variant="small"
-              className="mt-4 text-center text-blue-gray-600"
-            >
-              Don’t have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-blue-600 font-bold hover:underline"
-              >
-                Sign Up
-              </Link>
+            <Typography>
+              Don’t have an account? <Link to="/signup">Sign Up</Link>
             </Typography>
           </CardFooter>
         </form>
