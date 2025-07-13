@@ -1,61 +1,132 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useUser } from "../Context/UserContent";
 import Requests from "./Requests";
 
 export const Profile = () => {
   const navigate = useNavigate();
-  const reff = useRef();
+  const {
+    user,
+    updateUser,
+    loading,
+    requestsSent,
+    requestsReceived
+  } = useUser();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showRequests, setShowRequests] = useState(false);
   const [requestPage, setRequestPage] = useState(1);
   const requestsPerPage = 3;
 
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    location: "New York",
+    name: "",
+    location: "",
     photo: "https://via.placeholder.com/100",
-    skillsOffered: ["Graphic Design", "Video Editing", "Photoshop"],
-    skillsWanted: ["Python", "JavaScript", "Manager"],
-    availability: "Weekends",
+    skillsOffered: [],
+    skillsWanted: [],
+    availability: "",
     visibility: "Public",
-    rating: 4.5,
-    totalSwaps: 12,
+    rating: "No Rating!",
+    totalSwaps: 0,
   });
 
   useEffect(() => {
-    const dummyRequests = Array.from({ length: 10 }, (_, i) => ({
-      name: `Requester ${i + 1}`,
-      photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${60 + i}.jpg`,
-      rating: (Math.random() * 2 + 3).toFixed(1),
-      status: i % 3 === 0 ? "Accepted" : i % 3 === 1 ? "Rejected" : "Pending",
-      skillsOffered: ["Skill D", "Skill E"],
-      skillsWanted: ["Skill Z", "Skill W"],
-    }));
-    setRequests(dummyRequests);
-    setLoading(false);
-  }, []);
+    if (user) {
+      setProfile({
+        name: user.name || "",
+        location: user.location || "",
+        photo: user.photoUrl || "https://via.placeholder.com/100",
+        skillsOffered: user.skillsOffered || [],
+        skillsWanted: user.skillsWanted || [],
+        availability: Array.isArray(user.availability)
+          ? user.availability.join(", ")
+          : user.availability || "",
+        visibility: user.isPublic ? "Public" : "Private",
+        rating: user.ratings || "No Rating!",
+        totalSwaps: user.totalSwaps || 0,
+      });
+    }
+  }, [user]);
 
-  const paginatedRequests = requests.slice(
-    (requestPage - 1) * requestsPerPage,
-    requestPage * requestsPerPage
-  );
+  const handleSave = async () => {
+    try {
+      const updatedData = {
+        name: profile.name,
+        location: profile.location,
+        skillsOffered: profile.skillsOffered,
+        skillsWanted: profile.skillsWanted,
+        availability: profile.availability
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        isPublic: profile.visibility === "Public",
+        photoUrl: profile.photo,
+      };
 
-  const handleSave = () => {
-    console.log("Profile saved:", profile);
-    setIsEditing(false);
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!res.ok) throw new Error("Failed to update profile");
+
+      const updated = await res.json();
+      updateUser(updated.profile);
+
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
   };
 
   const handleChange = (field, value) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
 
+  const combinedRequests = [
+    ...requestsReceived.map((r) => ({ ...r, type: "received" })),
+    ...requestsSent.map((r) => ({ ...r, type: "sent" })),
+  ];
+
+  const paginatedRequests = combinedRequests.slice(
+    (requestPage - 1) * requestsPerPage,
+    requestPage * requestsPerPage
+  );
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+
+  const handleRemoveSkill = (field, index) => {
+  setProfile((prev) => ({
+    ...prev,
+    [field]: prev[field].filter((_, i) => i !== index)
+  }));
+};
+
+const handleAddSkill = (field) => {
+  const newSkill = prompt(`Enter a new skill to add to ${field === "skillsOffered" ? "Skills Offered" : "Skills Wanted"}:`);
+
+  if (newSkill && newSkill.trim() !== "") {
+    setProfile((prev) => ({
+      ...prev,
+      [field]: [...prev[field], newSkill.trim()],
+    }));
+  }
+};
+
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-tr from-indigo-50 to-black px-4 py-6 font-sans flex items-center justify-center overflow-hidden">
-     <motion.div
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -67,174 +138,136 @@ export const Profile = () => {
           <div className="space-x-4">
             {isEditing ? (
               <>
-                <button
-                  onClick={handleSave}
-                  className="text-green-600 hover:text-green-800 font-medium text-sm md:text-base"
-                >
+                <button onClick={handleSave} className="text-green-600 font-medium text-sm">
                   ✓ Save
                 </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="text-red-500 hover:text-red-700 font-medium text-sm md:text-base"
-                >
+                <button onClick={() => setIsEditing(false)} className="text-red-500 font-medium text-sm">
                   ✗ Discard
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="text-indigo-600 hover:underline font-medium text-sm md:text-base"
-              >
+              <button onClick={() => setIsEditing(true)} className="text-indigo-600 hover:underline font-medium text-sm">
                 ✎ Edit Profile
               </button>
             )}
           </div>
 
+            
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowRequests(true)}
-              className="bg-indigo-600 text-white text-sm px-4 py-1 rounded-md hover:bg-indigo-700 transition"
-            >
+            <button onClick={() => setShowRequests(true)} className="bg-indigo-600 text-white text-sm px-4 py-1 rounded-md">
               View Requests
             </button>
-            <button
-              onClick={() => navigate("/")}
-              className="text-indigo-500 hover:underline text-sm md:text-base"
-            >
+            <button onClick={() => navigate("/")} className="text-indigo-500 hover:underline text-sm">
               Home
             </button>
-            <img
-              src={profile.photo}
-              alt="Profile"
-              className="w-12 h-12 rounded-full border-2 border-indigo-300 object-cover"
-            />
+            <img src={profile.photo} alt="Profile" className="w-12 h-12 rounded-full border-2 object-cover" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-gray-700 font-medium mb-1">Name</label>
-            <input
-              type="text"
-              value={profile.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              className={`w-full border rounded-lg px-4 py-2 ${
-                isEditing ? "bg-white" : "bg-gray-100"
-              } focus:outline-none`}
-              readOnly={!isEditing}
-            />
+            <input type="text" value={profile.name} onChange={(e) => handleChange("name", e.target.value)} className={`w-full border rounded-lg px-4 py-2 ${isEditing ? "bg-white" : "bg-gray-100"}`} readOnly={!isEditing} />
           </div>
           <div>
             <label className="block text-gray-700 font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={profile.location}
-              onChange={(e) => handleChange("location", e.target.value)}
-              className={`w-full border rounded-lg px-4 py-2 ${
-                isEditing ? "bg-white" : "bg-gray-100"
-              } focus:outline-none`}
-              readOnly={!isEditing}
-            />
+            <input type="text" value={profile.location} onChange={(e) => handleChange("location", e.target.value)} className={`w-full border rounded-lg px-4 py-2 ${isEditing ? "bg-white" : "bg-gray-100"}`} readOnly={!isEditing} />
           </div>
           <div>
             <label className="block text-gray-700 font-medium mb-1">Rating</label>
-            <input
-              type="text"
-              value={profile.rating + " / 5"}
-              readOnly
-              className="w-full border rounded-lg px-4 py-2 bg-gray-100 focus:outline-none"
-            />
+            <input type="text" value={profile.rating} readOnly className="w-full border rounded-lg px-4 py-2 bg-gray-100" />
           </div>
           <div>
             <label className="block text-gray-700 font-medium mb-1">Total Swaps</label>
-            <input
-              type="text"
-              value={profile.totalSwaps}
-              readOnly
-              className="w-full border rounded-lg px-4 py-2 bg-gray-100 focus:outline-none"
-            />
+            <input type="text" value={profile.totalSwaps} readOnly className="w-full border rounded-lg px-4 py-2 bg-gray-100" />
           </div>
         </div>
 
-        {/* Skills Offered */}
         <div className="mt-6">
-          <label className="block text-gray-700 font-medium mb-2">Skills Offered</label>
-          <div className="flex flex-wrap gap-3">
-            {profile.skillsOffered.map((skill, i) => (
-              <span
-                key={i}
-                className="px-4 py-1 bg-blue-100 text-blue-800 text-sm rounded-full shadow-sm"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
+  <label className="block text-gray-700 font-medium mb-2">Skills Offered</label>
+  <div className="flex flex-wrap gap-3">
+    {profile.skillsOffered.map((skill, i) => (
+      <span key={i} className="flex items-center gap-1 px-4 py-1 bg-blue-100 text-blue-800 text-sm rounded-full shadow-sm">
+        {skill}
+        {isEditing && (
+          <button
+            onClick={() => handleRemoveSkill("skillsOffered", i)}
+            className="ml-1 text-red-500 hover:text-red-700 font-bold"
+          >
+            ×
+          </button>
+        )}
+      </span>
+    ))}
+    {isEditing && (
+      <button
+        onClick={() => handleAddSkill("skillsOffered")}
+        className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full shadow"
+      >
+        + Add Skill
+      </button>
+    )}
+  </div>
+</div>
 
-        {/* Skills Wanted */}
-        <div className="mt-6">
-          <label className="block text-gray-700 font-medium mb-2">Skills Wanted</label>
-          <div className="flex flex-wrap gap-3">
-            {profile.skillsWanted.map((skill, i) => (
-              <span
-                key={i}
-                className="px-4 py-1 bg-orange-100 text-orange-800 text-sm rounded-full shadow-sm"
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
+<div className="mt-6">
+  <label className="block text-gray-700 font-medium mb-2">Skills Wanted</label>
+  <div className="flex flex-wrap gap-3">
+    {profile.skillsWanted.map((skill, i) => (
+      <span key={i} className="flex items-center gap-1 px-4 py-1 bg-orange-100 text-orange-800 text-sm rounded-full shadow-sm">
+        {skill}
+        {isEditing && (
+          <button
+            onClick={() => handleRemoveSkill("skillsWanted", i)}
+            className="ml-1 text-red-500 hover:text-red-700 font-bold"
+          >
+            ×
+          </button>
+        )}
+      </span>
+    ))}
+    {isEditing && (
+      <button
+        onClick={() => handleAddSkill("skillsWanted")}
+        className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full shadow"
+      >
+        + Add Skill
+      </button>
+    )}
+  </div>
+</div>
 
-        {/* Availability & Visibility */}
+
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-gray-700 font-medium mb-1">Availability</label>
             {isEditing ? (
-              <select
-                value={profile.availability}
-                onChange={(e) => handleChange("availability", e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 bg-white focus:outline-none"
-              >
-                <option value="Weekdays">Weekdays</option>
+              <select value={profile.availability} onChange={(e) => handleChange("availability", e.target.value)} className="w-full border rounded-lg px-4 py-2 bg-white">
                 <option value="Weekends">Weekends</option>
+                <option value="Weekdays">Weekdays</option>
               </select>
             ) : (
-              <input
-                type="text"
-                value={profile.availability}
-                readOnly
-                className="w-full border rounded-lg px-4 py-2 bg-gray-100 focus:outline-none"
-              />
+              <input type="text" value={profile.availability} readOnly className="w-full border rounded-lg px-4 py-2 bg-gray-100" />
             )}
           </div>
           <div>
             <label className="block text-gray-700 font-medium mb-1">Profile Visibility</label>
             {isEditing ? (
-              <select
-                value={profile.visibility}
-                onChange={(e) => handleChange("visibility", e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 bg-white focus:outline-none"
-              >
+              <select value={profile.visibility} onChange={(e) => handleChange("visibility", e.target.value)} className="w-full border rounded-lg px-4 py-2 bg-white">
                 <option value="Public">Public</option>
                 <option value="Private">Private</option>
               </select>
             ) : (
-              <input
-                type="text"
-                value={profile.visibility}
-                readOnly
-                className="w-full border rounded-lg px-4 py-2 bg-gray-100 focus:outline-none"
-              />
+              <input type="text" value={profile.visibility} readOnly className="w-full border rounded-lg px-4 py-2 bg-gray-100" />
             )}
           </div>
         </div>
       </motion.div>
 
-      <Requests 
+      <Requests
         show={showRequests}
         onClose={() => setShowRequests(false)}
-        requests={requests}
+        requests={combinedRequests}
         paginatedRequests={paginatedRequests}
         requestPage={requestPage}
         setRequestPage={setRequestPage}

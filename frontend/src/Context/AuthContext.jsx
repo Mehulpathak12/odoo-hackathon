@@ -10,7 +10,7 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isLoggedIn = !user; ////LOGGED IN BY DEFAULT FOR DEV PURPOSE
+  const isLoggedIn = !!user; ////LOGGED IN BY DEFAULT FOR DEV PURPOSE
 
   useEffect(() => {
     const fetchProfile = async () => {

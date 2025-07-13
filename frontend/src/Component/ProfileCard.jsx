@@ -1,25 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import SkillRequestPopup from "./Sub/SkillRequestPopup";
-
-const dummyData = Array.from({ length: 14 }, (_, i) => ({
-  id: `${i + 1}`,
-  name: `Mukul Bassi ${i + 1}`,
-  photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${30 + i}.jpg`,
-  rating: (Math.random() * 2 + 3).toFixed(1),
-  feedback: [
-    "Great at collaborating.",
-    "Timely responses and very skilled.",
-    "Would love to work again.",
-  ],
-  skillsOffered: ["JavaScript", "Python", "C++"],
-  skillsWanted: ["TypeScript", "React"],
-}));
+import { useUser } from "../Context/UserContent";
 
 export const ProfileCard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const profile = dummyData.find((p) => p.id === id);
+  const { publicUsers, fetchPublicUsers } = useUser();
+
+  useEffect(() => {
+    fetchPublicUsers();
+  }, []);
+
+  const profile = publicUsers.find((user) => user.id === id);
 
   if (!profile) {
     return (
@@ -30,10 +23,10 @@ export const ProfileCard = () => {
   }
 
   return (
-   <div className=" relative min-h-screen bg-gradient-to-br from-black to-blue-950 p-10 overflow-hidden">
-<div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] bg-amber-200 rounded-full filter blur-[120px] opacity-60 animate-bounce z-0" />
-<div className="absolute bottom-[-2rem] right-[-10rem] w-[28rem] h-[28rem] bg-green-500 rounded-full filter blur-[100px] opacity-50 animate-bounce z-0" />
-<div className="absolute top-[-2rem]  right-[-10rem] w-[28rem] h-[28rem] bg-blue-400 rounded-full filter blur-[100px] opacity-30 spin-slow z-0" />
+    <div className="relative min-h-screen bg-gradient-to-br from-black to-blue-950 p-10 overflow-hidden">
+      <div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] bg-amber-200 rounded-full filter blur-[120px] opacity-60 animate-bounce z-0" />
+      <div className="absolute bottom-[-2rem] right-[-10rem] w-[28rem] h-[28rem] bg-green-500 rounded-full filter blur-[100px] opacity-50 animate-bounce z-0" />
+      <div className="absolute top-[-2rem] right-[-10rem] w-[28rem] h-[28rem] bg-blue-400 rounded-full filter blur-[100px] opacity-30 spin-slow z-0" />
 
       <div className="relative z-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <div className="flex justify-between items-center mb-6">
@@ -46,7 +39,7 @@ export const ProfileCard = () => {
               Home
             </button>
             <img
-              src="https://api.dicebear.com/7.x/thumbs/svg?seed=Marc"
+              src={profile.photoUrl || "https://api.dicebear.com/7.x/thumbs/svg?seed=Marc"}
               alt="User"
               className="w-10 h-10 rounded-full border"
             />
@@ -57,13 +50,13 @@ export const ProfileCard = () => {
           <div className="md:w-2/3 space-y-5">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">{profile.name}</h2>
-              <p className="text-sm text-gray-500">Rating: {profile.rating}/5</p>
+              <p className="text-sm text-gray-500">Rating: {profile.ratings || "No Rating"}/5</p>
             </div>
 
             <div>
               <h3 className="text-md font-medium text-gray-700 mb-1">Skills Offered</h3>
               <div className="flex flex-wrap gap-2">
-                {profile.skillsOffered.map((skill, i) => (
+                {profile.skillsOffered?.map((skill, i) => (
                   <span
                     key={i}
                     className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full"
@@ -77,7 +70,7 @@ export const ProfileCard = () => {
             <div>
               <h3 className="text-md font-medium text-gray-700 mb-1">Skills Wanted</h3>
               <div className="flex flex-wrap gap-2">
-                {profile.skillsWanted.map((skill, i) => (
+                {profile.skillsWanted?.map((skill, i) => (
                   <span
                     key={i}
                     className="bg-orange-100 text-orange-800 text-sm px-3 py-1 rounded-full"
@@ -89,18 +82,23 @@ export const ProfileCard = () => {
             </div>
 
             <div>
-              <h3 className="text-md font-medium text-gray-700 mb-1">Feedback</h3>
-              <ul className="list-disc list-inside text-gray-600 space-y-1">
-                {profile.feedback.map((f, i) => (
-                  <li key={i}>{f}</li>
-                ))}
-              </ul>
+              <h3 className="text-md font-medium text-gray-700 mb-1">Availability</h3>
+              <p className="text-sm text-gray-600">
+                {Array.isArray(profile.availability)
+                  ? profile.availability.join(", ")
+                  : profile.availability || "Not Provided"}
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-md font-medium text-gray-700 mb-1">Visibility</h3>
+              <p className="text-sm text-gray-600">{profile.isPublic ? "Public" : "Private"}</p>
             </div>
           </div>
 
           <div className="md:w-1/3 flex justify-center">
             <img
-              src={profile.photo}
+              src={profile.photoUrl || "https://via.placeholder.com/150"}
               alt="Profile"
               className="w-48 h-48 rounded-full border-4 border-indigo-300 shadow-lg object-cover"
             />
@@ -108,7 +106,7 @@ export const ProfileCard = () => {
         </div>
 
         <div className="mt-8 text-center">
-          <SkillRequestPopup />
+          <SkillRequestPopup toUser={profile} />
         </div>
       </div>
     </div>
