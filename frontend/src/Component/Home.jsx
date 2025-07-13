@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef, use } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext"; // Make sure the path is correct
-
+import ChangingLabel from "./Sub/ChangingLabel";
+import SkillRequestPopup from "./Sub/SkillRequestPopup";
+import Requests from "./Requests"
 export const Home = () => {
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
-
+  const reff = useRef();
   const [profiles, setProfiles] = useState([]);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,11 +16,15 @@ export const Home = () => {
   const [requestPage, setRequestPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("");
-
+  
   const profilesPerPage = 6;
   const requestsPerPage = 3;
+  
+  const username = "EXAMPLE USER"
+  
 
   useEffect(() => {
+    
     const dummyProfiles = Array.from({ length: 14 }, (_, i) => ({
       id: `${i + 1}`,
       name: `User ${i + 1}`,
@@ -43,6 +49,8 @@ export const Home = () => {
     setLoading(false);
   }, []);
 
+  
+
   const handleSearch = () => {
     const filtered = profiles.filter(profile =>
       profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,6 +72,10 @@ export const Home = () => {
     }
   };
 
+  
+  const explore = () => {
+    reff.current?.scrollIntoView({ behavior: 'smooth' });
+  } 
   const paginatedProfiles = profiles.slice(
     (currentPage - 1) * profilesPerPage,
     currentPage * profilesPerPage
@@ -80,22 +92,11 @@ export const Home = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-4xl font-extrabold text-indigo-700">SkillSwap</h1>
           <div className="space-x-4">
-            <button
-              onClick={() => setShowRequests((prev) => !prev)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-            >
-              Requests
-            </button>
             
-            {isLoggedIn ? (
-              <button
-                onClick={prof}
-                className="px-4 py-2 bg-amber-400 text-white rounded-lg"
-              >
-                Profile
-              </button>
-            ) :( console.log("Hi")
-            )}
+            
+            <label className="mr-10 text-indigo-600 font-bold text-2xl"> 
+            <ChangingLabel words={["C++", "React", "Python", "JavaScript", "Go", "Java"]} con={"Explore Skills like"} inter={800} />
+            </label>
 
             {isLoggedIn ? (
               <button
@@ -116,7 +117,109 @@ export const Home = () => {
         </div>
       </header>
 
-      <div className="mt-5 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 justify-center">
+    {!isLoggedIn ? (
+  <div className="bg-gradient-to-br from-white to-gray-100 py-20 px-6 sm:px-12 lg:px-24">
+    <div className="max-w-6xl mx-auto text-center">
+      <h2 className="text-5xl font-extrabold text-gray-800 mb-6 leading-tight">
+        Empower Your Skills, Elevate Others
+      </h2>
+      <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto">
+        <strong>Skill Swap</strong> is a collaborative platform where you can <strong>exchange knowledge</strong> with like-minded learners.
+        Whether you're a designer wanting to learn coding or a developer wanting to improve your public speaking—
+        there's a perfect match waiting for you.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-left">
+        <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-indigo-600 hover:shadow-xl transition">
+          <h3 className="text-xl font-semibold text-indigo-600 mb-3">🎯 Find Skill Matches</h3>
+          <p className="text-gray-700">
+            Connect with users who want what you offer and offer what you want.
+          </p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-indigo-600 hover:shadow-xl transition">
+          <h3 className="text-xl font-semibold text-indigo-600 mb-3">🤝 One-on-One Swaps</h3>
+          <p className="text-gray-700">
+            Schedule real-time learning sessions. No payments—just shared growth.
+          </p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-md p-6 border-t-4 border-indigo-600 hover:shadow-xl transition">
+          <h3 className="text-xl font-semibold text-indigo-600 mb-3">🚀 Grow Together</h3>
+          <p className="text-gray-700">
+            Build confidence, boost your skills, and grow faster with feedback and community support.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-16 flex flex-col items-center gap-5">
+        <a
+          href="/signup"
+          className="bg-indigo-600 text-white text-lg font-medium px-10 py-4 rounded-full shadow-md hover:bg-indigo-700 transition"
+        >
+          Join Skill Swap Now
+        </a>
+        <a
+          onClick={explore}
+          href="#start"
+          className="bg-cyan-500 text-white text-lg font-medium px-10 py-4 rounded-full shadow-md hover:bg-cyan-600 transition"
+        >
+          Explore Some Skill Swaps!
+        </a>
+      </div>
+    </div>
+  </div>
+) : (
+  <div className="relative bg-gradient-to-r from-white to-blue-50 py-20 px-6 sm:px-12 lg:px-24 text-center">
+
+  
+  <div className="absolute top-6 right-6 flex gap-4">
+    <button
+      onClick={() => setShowRequests((prev) => !prev)}
+      className="bg-indigo-600 text-white text-sm px-4 py-1 rounded-md hover:bg-indigo-700 transition"
+    >
+      View Requests
+    </button>
+
+    <button
+      onClick={prof}
+      className="px-4 mr-5 py-2 bg-amber-400 text-white rounded-lg shadow-md hover:bg-amber-500 transition"
+    >
+      Profile
+    </button>
+  </div>
+
+  <h2 className="text-4xl font-bold text-gray-800 mb-6">Welcome back, {username} 👋</h2>
+  <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
+    Ready to continue your learning journey? Here's your personalized dashboard to explore, connect, and grow!
+  </p>
+
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto text-left">
+    <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition border-l-4 border-cyan-500">
+      <h3 className="text-xl font-semibold text-cyan-600 mb-2">📚 My Swaps</h3>
+      <p className="text-gray-700">Track and manage your active skill swap sessions.</p>
+    </div>
+    <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition border-l-4 border-cyan-500">
+      <h3 className="text-xl font-semibold text-cyan-600 mb-2">🧠 Discover New Skills</h3>
+      <p className="text-gray-700">Explore trending skills and new learning opportunities.</p>
+    </div>
+    <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition border-l-4 border-cyan-500">
+      <h3 className="text-xl font-semibold text-cyan-600 mb-2">📨 Messages</h3>
+      <p className="text-gray-700">View and respond to swap requests from other learners.</p>
+    </div>
+  </div>
+
+  <a
+    onClick={explore}
+    href="#start"
+    className="mt-12 inline-block bg-indigo-600 text-white text-lg font-medium px-10 py-4 rounded-full shadow-md hover:bg-indigo-700 transition"
+  >
+    Explore More Skill Swaps!
+  </a>
+</div>
+
+)}
+
+
+      <div ref={reff} className="mt-5 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 justify-center">
         <div className="flex items-center w-full md:w-1/2 rounded-full overflow-hidden border border-gray-300 bg-white shadow-sm">
           <input
             type="text"
@@ -157,69 +260,15 @@ export const Home = () => {
         </div>
       </div>
 
-      {showRequests && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 relative">
-            <button
-              onClick={() => setShowRequests(false)}
-              className="absolute top-4 right-4 text-gray-600"
-            >
-              ✕
-            </button>
-            <h2 className="text-2xl font-semibold text-indigo-700 mb-4">Swap Requests</h2>
-            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-              {paginatedRequests.map((req, i) => (
-                <div
-                  key={i}
-                  className="border rounded-lg p-4 bg-gray-50 shadow-sm"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={req.photo}
-                        className="w-12 h-12 rounded-full border"
-                        alt="user"
-                      />
-                      <div>
-                        <h3 className="font-semibold text-gray-800">{req.name}</h3>
-                        <p className="text-sm text-gray-600">Rating: {req.rating}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-700">
-                        Status: <span className={
-                          req.status === "Accepted"
-                            ? "text-green-600"
-                            : req.status === "Rejected"
-                            ? "text-red-500"
-                            : "text-yellow-600"
-                        }>
-                          {req.status}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-700">
-                    <p><strong>Skills Offered:</strong> {req.skillsOffered.join(", ")}</p>
-                    <p><strong>Skills Wanted:</strong> {req.skillsWanted.join(", ")}</p>
-                  </div>
-                </div>
-              ))}
-              <div className="flex justify-center mt-4 space-x-2">
-                {Array.from({ length: Math.ceil(requests.length / requestsPerPage) }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setRequestPage(i + 1)}
-                    className={`px-3 py-1 rounded ${requestPage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600"}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <Requests 
+        show={showRequests}
+        onClose={() => setShowRequests(false)}
+        requests={requests}
+        paginatedRequests={paginatedRequests}
+        requestPage={requestPage}
+        setRequestPage={setRequestPage}
+        requestsPerPage={requestsPerPage}
+      />
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -244,9 +293,7 @@ export const Home = () => {
                       <p className="text-sm text-gray-500">Rating: {profile.rating}/5</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-indigo-500 text-white rounded-lg">
-                    Request
-                  </button>
+                  <SkillRequestPopup/>
                 </div>
                 <div className="mt-4">
                   <p className="text-sm font-medium text-gray-700 mb-1">Skills Offered</p>

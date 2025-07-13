@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import SkillRequestPopup from "./Sub/SkillRequestPopup";
 
 const dummyData = Array.from({ length: 14 }, (_, i) => ({
   id: `${i + 1}`,
@@ -29,9 +30,12 @@ export const ProfileCard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-100 p-10">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
-        {/* Header */}
+   <div className=" relative min-h-screen bg-gradient-to-br from-black to-blue-950 p-10 overflow-hidden">
+<div className="absolute bottom-[-10rem] left-[-10rem] w-[30rem] h-[30rem] bg-amber-200 rounded-full filter blur-[120px] opacity-60 animate-bounce z-0" />
+<div className="absolute bottom-[-2rem] right-[-10rem] w-[28rem] h-[28rem] bg-green-500 rounded-full filter blur-[100px] opacity-50 animate-bounce z-0" />
+<div className="absolute top-[-2rem]  right-[-10rem] w-[28rem] h-[28rem] bg-blue-400 rounded-full filter blur-[100px] opacity-30 spin-slow z-0" />
+
+      <div className="relative z-10 max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-indigo-700">SkillSwap Platform</h1>
           <div className="flex gap-4 items-center">
@@ -41,9 +45,6 @@ export const ProfileCard = () => {
             >
               Home
             </button>
-            <button className="text-indigo-600 underline hover:text-indigo-800">
-              Swap Request
-            </button>
             <img
               src="https://api.dicebear.com/7.x/thumbs/svg?seed=Marc"
               alt="User"
@@ -52,7 +53,6 @@ export const ProfileCard = () => {
           </div>
         </div>
 
-        {/* Profile Info */}
         <div className="flex flex-col md:flex-row gap-8 items-start">
           <div className="md:w-2/3 space-y-5">
             <div>
@@ -61,7 +61,7 @@ export const ProfileCard = () => {
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-700 mb-1">Skills Offered</h3>
+              <h3 className="text-md font-medium text-gray-700 mb-1">Skills Offered</h3>
               <div className="flex flex-wrap gap-2">
                 {profile.skillsOffered.map((skill, i) => (
                   <span
@@ -75,7 +75,7 @@ export const ProfileCard = () => {
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-700 mb-1">Skills Wanted</h3>
+              <h3 className="text-md font-medium text-gray-700 mb-1">Skills Wanted</h3>
               <div className="flex flex-wrap gap-2">
                 {profile.skillsWanted.map((skill, i) => (
                   <span
@@ -89,7 +89,7 @@ export const ProfileCard = () => {
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-700 mb-1">Feedback</h3>
+              <h3 className="text-md font-medium text-gray-700 mb-1">Feedback</h3>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
                 {profile.feedback.map((f, i) => (
                   <li key={i}>{f}</li>
@@ -107,11 +107,8 @@ export const ProfileCard = () => {
           </div>
         </div>
 
-        {/* Request Button */}
         <div className="mt-8 text-center">
-          <button className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-200">
-            Request
-          </button>
+          <SkillRequestPopup />
         </div>
       </div>
     </div>
