@@ -1,6 +1,6 @@
 import React, { useEffect, useState,useRef, use } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../Context/AuthContext"; // Make sure the path is correct
+import { useAuth } from "../Context/AuthContext"; 
 import ChangingLabel from "./Sub/ChangingLabel";
 import SkillRequestPopup from "./Sub/SkillRequestPopup";
 import Requests from "./Requests"
