@@ -1,15 +1,32 @@
-import React from "react";
+import React, { useState } from "react";
 
-const SwapRequestsModal = ({
+const Requests = ({
   show,
   onClose,
   requests,
-  paginatedRequests,
   requestPage,
   setRequestPage,
   requestsPerPage,
 }) => {
+  const [activeTab, setActiveTab] = useState("received");
+  const [actions, setActions] = useState({});
+
   if (!show) return null;
+
+  const filteredRequests = requests.filter((r) => r.type === activeTab);
+  const paginatedRequests = filteredRequests.slice(
+    (requestPage - 1) * requestsPerPage,
+    requestPage * requestsPerPage
+  );
+
+  const handleAction = (index, type) => {
+    setActions((prev) => ({
+      ...prev,
+      [index]: type,
+    }));
+    console.log(`${type} clicked for`, paginatedRequests[index]);
+    // TODO: Trigger backend API for Accept/Decline here
+  };
 
   return (
     <div
@@ -31,68 +48,126 @@ const SwapRequestsModal = ({
           Swap Requests
         </h2>
 
-        {requests.length === 0 ? (
-          <p className="text-center text-gray-500">No requests found.</p>
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            onClick={() => {
+              setActiveTab("received");
+              setRequestPage(1);
+            }}
+            className={`px-4 py-1 rounded-full text-sm font-medium ${
+              activeTab === "received"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Received
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("sent");
+              setRequestPage(1);
+            }}
+            className={`px-4 py-1 rounded-full text-sm font-medium ${
+              activeTab === "sent"
+                ? "bg-indigo-600 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            Sent
+          </button>
+        </div>
+
+        {filteredRequests.length === 0 ? (
+          <p className="text-center text-gray-500">No {activeTab} requests found. Send Some?</p>
         ) : (
           <>
-            <div className=" z-10 space-y-4 max-h-[60vh] bg-white overflow-y-auto pr-2">
-        <div className="absolute bottom-[-5rem] left-[-25rem] w-[25rem] h-[28rem] bg-blue-400 rounded-full filter blur-[120px] opacity-60 animate-bounce z-0" />
-        <div className="absolute bottom-[-5rem] right-[-25rem] w-[23rem] h-[24rem] bg-blue-400 rounded-full filter blur-[100px] opacity-50 animate-bounce z-0" />
-              {paginatedRequests.map((req, i) => (
-                <div
-                  key={i}
-                  className="border rounded-lg p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={req.photo}
-                        className="w-12 h-12 rounded-full border"
-                        alt="user"
-                      />
-                      <div>
-                        <h3 className="font-semibold text-gray-800">
-                          {req.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Rating: {req.rating}
-                        </p>
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+              {paginatedRequests.map((req, i) => {
+                const globalIndex = (requestPage - 1) * requestsPerPage + i;
+                const action = actions[globalIndex];
+
+                return (
+                  <div
+                    key={globalIndex}
+                    className="border rounded-lg p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={req.photo}
+                          className="w-12 h-12 rounded-full border"
+                          alt="user"
+                        />
+                        <div>
+                          <h3 className="font-semibold text-gray-800">{req.name}</h3>
+                          <p className="text-sm text-gray-600">Rating: {req.rating}</p>
+                        </div>
                       </div>
+
+                      {activeTab === "sent" && (
+                        <div className="text-right">
+                          <p className="font-medium text-gray-700">
+                            Status:{" "}
+                            <span
+                              className={
+                                req.status === "Accepted"
+                                  ? "text-green-600"
+                                  : req.status === "Rejected"
+                                  ? "text-red-500"
+                                  : "text-yellow-600"
+                              }
+                            >
+                              {req.status}
+                            </span>
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-700">
-                        Status:{" "}
-                        <span
-                          className={
-                            req.status === "Accepted"
-                              ? "text-green-600"
-                              : req.status === "Rejected"
-                              ? "text-red-500"
-                              : "text-yellow-600"
-                          }
-                        >
-                          {req.status}
-                        </span>
+
+                    <div className="mt-3 text-sm text-gray-700">
+                      <p>
+                        <strong>Skills Offered:</strong> {req.skillsOffered.join(", ")}
+                      </p>
+                      <p>
+                        <strong>Skills Wanted:</strong> {req.skillsWanted.join(", ")}
                       </p>
                     </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-700">
-                    <p>
-                      <strong>Skills Offered:</strong>{" "}
-                      {req.skillsOffered.join(", ")}
-                    </p>
-                    <p>
-                      <strong>Skills Wanted:</strong>{" "}
-                      {req.skillsWanted.join(", ")}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
 
+                    {activeTab === "received" && (
+                      <div className="mt-4 text-right">
+                        {!action ? (
+                          <div className="flex gap-3 justify-end">
+                            <button
+                              onClick={() => handleAction(globalIndex, "Accepted")}
+                              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleAction(globalIndex, "Declined")}
+                              className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        ) : (
+                          <p
+                            className={`font-medium mt-2 ${
+                              action === "Accepted" ? "text-green-600" : "text-red-500"
+                            }`}
+                          >
+                            Request {action.toLowerCase()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
             <div className="flex justify-center mt-6 space-x-2">
               {Array.from({
-                length: Math.ceil(requests.length / requestsPerPage),
+                length: Math.ceil(filteredRequests.length / requestsPerPage),
               }).map((_, i) => (
                 <button
                   key={i}
@@ -114,4 +189,4 @@ const SwapRequestsModal = ({
   );
 };
 
-export default SwapRequestsModal;
+export default Requests;

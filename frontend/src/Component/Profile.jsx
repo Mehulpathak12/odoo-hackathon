@@ -231,8 +231,7 @@ export const Profile = () => {
         </div>
       </motion.div>
 
-      {/* Requests Modal */}
-      <Requests
+      <Requests 
         show={showRequests}
         onClose={() => setShowRequests(false)}
         requests={requests}

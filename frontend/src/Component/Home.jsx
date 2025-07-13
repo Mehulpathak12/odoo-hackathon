@@ -35,14 +35,16 @@ export const Home = () => {
       status: "Pending"
     }));
 
-    const dummyRequests = Array.from({ length: 10 }, (_, i) => ({
-      name: `Requester ${i + 1}`,
-      photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${60 + i}.jpg`,
-      rating: (Math.random() * 2 + 3).toFixed(1),
-      status: i % 3 === 0 ? "Accepted" : i % 3 === 1 ? "Rejected" : "Pending",
-      skillsOffered: ["Skill D", "Skill E"],
-      skillsWanted: ["Skill Z", "Skill W"]
-    }));
+   const dummyRequests = Array.from({ length: 10 }, (_, i) => ({
+  name: `Requester ${i + 1}`,
+  photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${60 + i}.jpg`,
+  rating: (Math.random() * 2 + 3).toFixed(1),
+  status: i % 3 === 0 ? "Accepted" : i % 3 === 1 ? "Rejected" : "Pending",
+  skillsOffered: ["Skill D", "Skill E"],
+  skillsWanted: ["Skill Z", "Skill W"],
+  type: i % 2 === 0 ? "received" : "sent"
+}));
+
 
     setProfiles(dummyProfiles);
     setRequests(dummyRequests);
