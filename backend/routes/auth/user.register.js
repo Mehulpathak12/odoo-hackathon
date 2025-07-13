@@ -98,7 +98,7 @@ router.post(
         name,
         email,
         passwordHash: hash,
-        location: location || ''
+        location: location || '',
       });
 
       sendTokenCookie(res, user);
@@ -177,14 +177,32 @@ router.put('/auth/profile/skills', authMiddleware, async (req, res) => {
 // @route   PUT /api/auth/profile
 router.put('/auth/profile', authMiddleware, async (req, res) => {
   try {
-    const { name, location, availability, isPublic } = req.body;
-    const updates = {};
-    if (name) updates.name = name;
-    if (location !== undefined) updates.location = location;
-    if (availability) updates.availability = availability;
-    if (isPublic !== undefined) updates.isPublic = isPublic;
+    const {
+      name,
+      location,
+      skillsOffered,
+      skillsWanted,
+      availability,
+      isPublic,
+      photoUrl
+    } = req.body;
 
-    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Update fields directly from request body
+    if (name !== undefined) user.name = name;
+    if (location !== undefined) user.location = location;
+    if (Array.isArray(skillsOffered)) user.skillsOffered = skillsOffered.map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(skillsWanted)) user.skillsWanted = skillsWanted.map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(availability)) user.availability = availability.map(s => s.trim()).filter(Boolean);
+    if (isPublic !== undefined) user.isPublic = isPublic;
+    if (photoUrl !== undefined) user.photoUrl = photoUrl;
+
+    await user.save();
+
     res.json({
       success: true,
       profile: {
@@ -195,7 +213,7 @@ router.put('/auth/profile', authMiddleware, async (req, res) => {
         availability: user.availability,
         isPublic: user.isPublic,
         photoUrl: user.photoUrl,
-        profileUrl: `/users/${user._id}`
+        profileUrl: `/api/users/${user._id}`,
       }
     });
   } catch (err) {
@@ -219,10 +237,12 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
         availability: user.availability,
         isPublic: user.isPublic,
         photoUrl: user.photoUrl,
-        profileUrl: `/users/${user._id}`
-      }
+        ratings: Array.isArray(user.ratings) && user.ratings.length > 0 ? user.ratings : "No Rating!",
+        totalSwaps: 0,
+        profileUrl: `/api/users/${user._id}`,
+      } 
     });
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Fetch failed' });
   }
@@ -230,7 +250,7 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
 router.get('/users/public', async (req, res) => {
   try {
     const users = await User.find({ isPublic: true }).select(
-      'name location skillsOffered skillsWanted availability photoUrl _id'
+      'name location skillsOffered skillsWanted availability photoUrl _id ratings'
     );
 
     const formatted = users.map(user => ({
@@ -241,7 +261,8 @@ router.get('/users/public', async (req, res) => {
       skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
       skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
       availability: user.availability || ['Not mentioned'],
-      profileUrl: `/users/${user._id}`
+      ratings: users.ratings ? users.ratings : "NULL",
+      profileUrl: `/api/users/${user._id}`,
     }));
 
     res.json({ success: true, users: formatted });
@@ -268,7 +289,7 @@ router.get('/users/:id', async (req, res) => {
         skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
         skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
         availability: user.availability || ['Not mentioned'],
-        profileUrl: `/users/${user._id}`
+        profileUrl: `/api/users/${user._id}`,
       }
     });
   } catch (err) {
