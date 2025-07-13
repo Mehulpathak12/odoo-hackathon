@@ -12,7 +12,7 @@ app.use(express.static('public'));
 app.use(cookieParser());
 
 app.use(cors({
-    origin:"http://10.177.160.3/5173",
+    origin:true,
     credentials: true
 }))
 

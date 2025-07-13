@@ -98,7 +98,7 @@ router.post(
         name,
         email,
         passwordHash: hash,
-        location: location || ''
+        location: location || '',
       });
 
       sendTokenCookie(res, user);
@@ -219,8 +219,10 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
         availability: user.availability,
         isPublic: user.isPublic,
         photoUrl: user.photoUrl,
-        profileUrl: `/users/${user._id}`
-      }
+        ratings: Array.isArray(user.ratings) && user.ratings.length > 0 ? user.ratings : "No Rating!",
+        totalSwaps: 0,
+        profileUrl: `/api/users/${user._id}`
+      } 
     });
   } catch (err) {
     console.error(err);
@@ -230,7 +232,7 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
 router.get('/users/public', async (req, res) => {
   try {
     const users = await User.find({ isPublic: true }).select(
-      'name location skillsOffered skillsWanted availability photoUrl _id'
+      'name location skillsOffered skillsWanted availability photoUrl _id ratings'
     );
 
     const formatted = users.map(user => ({
@@ -241,7 +243,8 @@ router.get('/users/public', async (req, res) => {
       skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
       skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
       availability: user.availability || ['Not mentioned'],
-      profileUrl: `/users/${user._id}`
+      ratings: users.ratings ? users.ratings : "NULL",
+      profileUrl: `/api/users/${user._id}`
     }));
 
     res.json({ success: true, users: formatted });

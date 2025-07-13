@@ -15,47 +15,126 @@ export const Profile = () => {
   const requestsPerPage = 3;
 
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    location: "New York",
-    photo: "https://via.placeholder.com/100",
-    skillsOffered: ["Graphic Design", "Video Editing", "Photoshop"],
-    skillsWanted: ["Python", "JavaScript", "Manager"],
-    availability: "Weekends",
+    name: "",
+    location: "",
+    photo: "",
+    skillsOffered: [],
+    skillsWanted: [],
+    availability: "",
     visibility: "Public",
-    rating: 4.5,
-    totalSwaps: 12,
+    rating: "No Rating!",
+    totalSwaps: 0,
   });
+  
 
   useEffect(() => {
-    const dummyRequests = Array.from({ length: 10 }, (_, i) => ({
-      name: `Requester ${i + 1}`,
-      photo: `https://randomuser.me/api/portraits/${i % 2 === 0 ? "men" : "women"}/${60 + i}.jpg`,
-      rating: (Math.random() * 2 + 3).toFixed(1),
-      status: i % 3 === 0 ? "Accepted" : i % 3 === 1 ? "Rejected" : "Pending",
-      skillsOffered: ["Skill D", "Skill E"],
-      skillsWanted: ["Skill Z", "Skill W"],
-    }));
-    setRequests(dummyRequests);
-    setLoading(false);
-  }, []);
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/auth/profile", {
+          method: "GET",
+          credentials: "include",
+        });
+  
+        if (!res.ok) throw new Error("Failed to fetch profile");
+  
+        const json = await res.json();
+        const user = json.profile;
+  
+        setProfile({
+          name: user.name || "",
+          location: user.location || "",
+          photo: user.photoUrl || "https://via.placeholder.com/100",
+          skillsOffered: user.skillsOffered || [],
+          skillsWanted: user.skillsWanted || [],
+          availability: Array.isArray(user.availability)
+            ? user.availability.join(", ")
+            : user.availability || "",
+          visibility: user.isPublic ? "Public" : "Private",
+          rating: user.ratings || "No Rating!",
+          totalSwaps: user.totalSwaps || 0,
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        navigate("/login");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchProfile();
+  }, [navigate]);
+  
+  const handleSave = async () => {
+    try {
+      const updatedData = {
+        name: profile.name,
+        location: profile.location,
+        skillsOffered: profile.skillsOffered,
+        skillsWanted: profile.skillsWanted,
+        availability: profile.availability
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        isPublic: profile.visibility === "Public",
+        photoUrl: profile.photo,
+      };
+  
+      const res = await fetch("http://localhost:3000/api/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updatedData),
+      });
+  
+      if (!res.ok) throw new Error("Failed to update profile");
+  
+      const updated = await res.json();
+      const user = updated.profile;
+  
+      setProfile((prev) => ({
+        ...prev,
+        name: user.name,
+        location: user.location,
+        photo: user.photoUrl,
+        skillsOffered: user.skillsOffered,
+        skillsWanted: user.skillsWanted,
+        availability: Array.isArray(user.availability)
+          ? user.availability.join(", ")
+          : "",
+        visibility: user.isPublic ? "Public" : "Private",
+        rating: user.ratings || "No Rating!",
+        totalSwaps: user.totalSwaps || 0,
+      }));
+  
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
+  };
+  
+
+  const handleChange = (field, value) => {
+    setProfile((prev) => ({ ...prev, [field]: value }));
+  };
 
   const paginatedRequests = requests.slice(
     (requestPage - 1) * requestsPerPage,
     requestPage * requestsPerPage
   );
 
-  const handleSave = () => {
-    console.log("Profile saved:", profile);
-    setIsEditing(false);
-  };
-
-  const handleChange = (field, value) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-tr from-indigo-50 to-black px-4 py-6 font-sans flex items-center justify-center overflow-hidden">
-     <motion.div
+      <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -140,7 +219,7 @@ export const Profile = () => {
             <label className="block text-gray-700 font-medium mb-1">Rating</label>
             <input
               type="text"
-              value={profile.rating + " / 5"}
+              value={profile.rating}
               readOnly
               className="w-full border rounded-lg px-4 py-2 bg-gray-100 focus:outline-none"
             />
@@ -191,14 +270,12 @@ export const Profile = () => {
           <div>
             <label className="block text-gray-700 font-medium mb-1">Availability</label>
             {isEditing ? (
-              <select
+              <input
+                type="text"
                 value={profile.availability}
                 onChange={(e) => handleChange("availability", e.target.value)}
                 className="w-full border rounded-lg px-4 py-2 bg-white focus:outline-none"
-              >
-                <option value="Weekdays">Weekdays</option>
-                <option value="Weekends">Weekends</option>
-              </select>
+              />
             ) : (
               <input
                 type="text"
@@ -231,7 +308,7 @@ export const Profile = () => {
         </div>
       </motion.div>
 
-      <Requests 
+      <Requests
         show={showRequests}
         onClose={() => setShowRequests(false)}
         requests={requests}

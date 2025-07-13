@@ -7,11 +7,11 @@ const SwapRequestSchema = new mongoose.Schema({
     skillOffered:   { type: String, required: true },
     skillRequested:{ type: String, required: true },
   
-    status:         { 
-                      type: String, 
-                      enum: ['pending','accepted','rejected','cancelled'], 
-                      default: 'pending' 
-                    },
+    status:{ 
+    type: String, 
+    enum: ['pending','accepted','rejected','cancelled'], 
+    default: 'pending' 
+    },
   
     // after swap, either user can leave feedback
     feedback: {
