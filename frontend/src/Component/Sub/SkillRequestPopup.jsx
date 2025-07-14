@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "../../Context/UserContent";
 
 const SkillRequestPopup = ({ toUser }) => {
-  const { user, sendRequest } = useUser(); // assuming sendRequest is defined in context
+  const { user, sendRequest } = useUser(); 
   const [showModal, setShowModal] = useState(false);
   const [wantedSkill, setWantedSkill] = useState("");
   const [offeredSkill, setOfferedSkill] = useState("");
   const [reqCheckText, setreqCheckText] = useState("");
+  const [message, setMessage] = useState("")
+  const [userId,SetUserId] = useState(0)
 
   const handleSubmit = async () => {
     if (!wantedSkill.trim() || !offeredSkill.trim()) {
@@ -19,9 +21,10 @@ const SkillRequestPopup = ({ toUser }) => {
     }
 
     try {
-      await sendRequest(toUser._id, wantedSkill.trim(), offeredSkill.trim());
-      setreqCheckText("");
+      await sendRequest(toUser.id, wantedSkill.trim(), offeredSkill.trim(), message.trim());
       setShowModal(false);
+      setreqCheckText("");
+      setMessage("");
       setWantedSkill("");
       setOfferedSkill("");
     } catch (err) {
@@ -35,6 +38,10 @@ const SkillRequestPopup = ({ toUser }) => {
     setShowModal(show);
   };
 
+  useEffect(() => {
+    SetUserId(toUser.id)  
+  }, [])
+  
   return (
     <div>
       <button
@@ -81,7 +88,16 @@ const SkillRequestPopup = ({ toUser }) => {
               placeholder="e.g. Graphic Design"
               className="w-full px-4 py-2 mb-6 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300"
             />
-
+            <label className="block text-gray-700 font-medium mb-1">
+               Message
+            </label>
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="e.g. Would you like to Collab!"
+              className="w-full px-4 py-2 mb-4 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300"
+            />
             <div className="flex justify-end gap-2">
               <label className="px-4 text-sm py-2 text-red-500 transition">
                 {reqCheckText}

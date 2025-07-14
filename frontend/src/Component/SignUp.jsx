@@ -4,14 +4,14 @@ import {
 } from "@material-tailwind/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../Context/AuthContext";  // Adjust if needed
+import { useAuth } from "../Context/AuthContext"; 
 
 
 export function SignUp() {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "", email: "", password: "", phone: "", agree: false,
+    name: "", email: "", password: "", agree: false,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,12 +38,11 @@ export function SignUp() {
       name: formData.name,
       email: formData.email,
       password: formData.password,
-      phone: formData.phone,
     });
     setLoading(false);
 
     if (success) {
-      navigate("/"); // Redirect after signup
+      navigate("/setup-profile"); 
     } else {
       setError(message);
     }
@@ -61,7 +60,6 @@ export function SignUp() {
           <CardBody className="flex flex-col gap-5 px-6">
             <Input label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
             <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-            <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} required />
             <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
             <div className="-ml-2.5">
               <Checkbox name="agree" label="I agree to the Terms & Privacy" checked={formData.agree} onChange={handleChange} />

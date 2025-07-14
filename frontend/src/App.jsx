@@ -6,7 +6,8 @@ import { Home } from './Component/Home';
 import { Profile } from './Component/Profile';
 import { ProfileCard } from './Component/ProfileCard';
 import { AuthProvider } from './Context/AuthContext';
-
+import { FirstTimeprofile } from './Component/Sub/FirstTimeProfileForm';
+ 
 function App() {
   return (
     <AuthProvider>
@@ -18,6 +19,7 @@ function App() {
           <Route path='/signin' element={<SignIn />} />
           <Route path='/profile' element={<Profile />} />
           <Route path='/profile/:id' element={<ProfileCard />} />
+          <Route path='/setup-profile' element={<FirstTimeprofile />} />
         </Routes>
       </BrowserRouter>
     </UserProvider>

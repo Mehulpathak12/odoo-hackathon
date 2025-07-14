@@ -80,6 +80,32 @@ export function UserProvider({ children }) {
     }
   }
 
+  async function uploadProfilePhoto(file) {
+  if (!file || !user?.id) return;
+
+  const formData = new FormData();
+  formData.append("photo", file);
+
+  try {
+    const res = await fetch("/api/auth/profile/photo", {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error("Failed to upload profile photo");
+
+    const data = await res.json();
+
+    const updatedUser = { ...user, photoUrl: data.photoUrl };
+    setUser(updatedUser);
+    updateUser(updatedUser);
+  } catch (err) {
+    console.error("Profile photo upload failed:", err);
+  }
+}
+
+
   async function fetchSentRequests() {
     if (!user?.id) return;
     try {
@@ -130,6 +156,7 @@ export function UserProvider({ children }) {
     setUser,
     updateUser,
     fetchUserData,
+    uploadProfilePhoto,
     fetchPublicUsers,
     fetchAllPosts,
     sendRequest,
