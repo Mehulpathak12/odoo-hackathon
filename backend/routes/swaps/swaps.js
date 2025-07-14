@@ -115,5 +115,74 @@ router.put('/swaps/:id/respond', authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error responding to swap request' });
   }
 });
+router.post(
+  '/swaps/:id/rate',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { score, note } = req.body;
+      const swapId      = req.params.id;
+      const raterId     = req.user.id;
 
+      // 1) Validate score
+      if (typeof score !== 'number' || score < 1 || score > 5) {
+        return res.status(400).json({
+          success: false,
+          message: 'Score must be a number between 1 and 5'
+        });
+      }
+
+      // 2) Fetch swap
+      const swap = await SwapRequest.findById(swapId);
+      if (!swap) {
+        return res.status(404).json({ success: false, message: 'Swap not found' });
+      }
+
+      // 3) Check it's accepted
+      if (swap.status !== 'accepted') {
+        return res.status(400).json({
+          success: false,
+          message: 'Can only rate after a swap is accepted'
+        });
+      }
+
+      // 4) Only the requester may rate
+      if (swap.requester.toString() !== raterId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Only the requester can rate this swap'
+        });
+      }
+
+      // 5) Fetch the provider user
+      const provider = await User.findById(swap.target);
+      if (!provider) {
+        return res.status(404).json({ success: false, message: 'Provider user not found' });
+      }
+
+      // 6) Add rating
+      provider.ratings.push({
+        from:  raterId,
+        score,
+        note: note || ''
+      });
+      await provider.save();
+
+      // 7) Compute average
+      const total  = provider.ratings.length;
+      const sum    = provider.ratings.reduce((acc, r) => acc + r.score, 0);
+      const avg    = total > 0 ? (sum / total).toFixed(2) : NaN;
+
+      return res.json({
+        success: true,
+        message: 'Rating saved',
+        averageRating: avg,
+        totalRatings: total
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+);
 module.exports = router;
