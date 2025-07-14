@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useUser } from "../../Context/UserContent";
 
 const SkillRequestPopup = ({ toUser }) => {
-  const { user, sendRequest } = useUser(); 
+  const { sendRequest } = useUser();
   const [showModal, setShowModal] = useState(false);
   const [wantedSkill, setWantedSkill] = useState("");
   const [offeredSkill, setOfferedSkill] = useState("");
   const [reqCheckText, setreqCheckText] = useState("");
-  const [message, setMessage] = useState("")
-  const [userId,SetUserId] = useState(0)
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async () => {
     if (!wantedSkill.trim() || !offeredSkill.trim()) {
@@ -21,7 +20,13 @@ const SkillRequestPopup = ({ toUser }) => {
     }
 
     try {
-      await sendRequest(toUser.id, wantedSkill.trim(), offeredSkill.trim(), message.trim());
+      await sendRequest({
+        toUserId: toUser.id,
+        skillWanted: wantedSkill.trim(),
+        skillOffered: offeredSkill.trim(),
+        message: message.trim(),
+      });
+
       setShowModal(false);
       setreqCheckText("");
       setMessage("");
@@ -38,10 +43,6 @@ const SkillRequestPopup = ({ toUser }) => {
     setShowModal(show);
   };
 
-  useEffect(() => {
-    SetUserId(toUser.id)  
-  }, [])
-  
   return (
     <div>
       <button
@@ -53,10 +54,7 @@ const SkillRequestPopup = ({ toUser }) => {
 
       {showModal && (
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowModal(false);
-          }}
+          onClick={() => setShowModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
         >
           <div
@@ -88,8 +86,9 @@ const SkillRequestPopup = ({ toUser }) => {
               placeholder="e.g. Graphic Design"
               className="w-full px-4 py-2 mb-6 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300"
             />
+
             <label className="block text-gray-700 font-medium mb-1">
-               Message
+              Message
             </label>
             <input
               type="text"
@@ -98,6 +97,7 @@ const SkillRequestPopup = ({ toUser }) => {
               placeholder="e.g. Would you like to Collab!"
               className="w-full px-4 py-2 mb-4 border rounded-md focus:outline-none focus:ring focus:ring-indigo-300"
             />
+
             <div className="flex justify-end gap-2">
               <label className="px-4 text-sm py-2 text-red-500 transition">
                 {reqCheckText}

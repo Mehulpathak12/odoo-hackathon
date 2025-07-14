@@ -59,26 +59,28 @@ export function UserProvider({ children }) {
   }
 
   async function sendRequest({ toUserId, skillWanted, skillOffered, message }) {
-    try {
-      const res = await fetch(`/api/requests`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          toUserId,
-          fromUserId: user.id,
-          skillWanted,
-          skillOffered,
-          message,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to send request");
-      return await res.json();
-    } catch (err) {
-      console.error("Failed to send request:", err);
-    }
+  try {
+    const res = await fetch(`http://localhost:3000/api/swaps`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        toUserId,
+        skillOffered,
+        skillRequested: skillWanted,
+        message,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to send request");
+    return await res.json();
+  } catch (err) {
+    console.error("Failed to send request:", err);
   }
+}
+
 
   async function uploadProfilePhoto(file) {
   if (!file || !user?.id) return;
@@ -107,28 +109,37 @@ export function UserProvider({ children }) {
 
 
   async function fetchSentRequests() {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/requests/sent/${user.id}`);
-      if (!res.ok) throw new Error("Failed to fetch sent requests");
-      const data = await res.json();
-      setRequestsSent(data);
-    } catch (err) {
-      console.error("Failed to fetch sent requests:", err);
-    }
-  }
+  if (!user?.id) return;
+  try {
+    const res = await fetch("http://localhost:3000/api/swaps", {
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("Failed to fetch swap requests");
+    const data = await res.json();
 
-  async function fetchReceivedRequests() {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`/api/requests/received/${user.id}`);
-      if (!res.ok) throw new Error("Failed to fetch received requests");
-      const data = await res.json();
-      setRequestsReceived(data);
-    } catch (err) {
-      console.error("Failed to fetch received requests:", err);
-    }
+    const sent = data.swaps.filter((swap) => swap.requester._id === user.id);
+    setRequestsSent(sent);
+  } catch (err) {
+    console.error("Failed to fetch sent requests:", err);
   }
+}
+
+async function fetchReceivedRequests() {
+  if (!user?.id) return;
+  try {
+    const res = await fetch("http://localhost:3000/api/swaps", {
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("Failed to fetch swap requests");
+    const data = await res.json();
+
+    const received = data.swaps.filter((swap) => swap.target._id === user.id);
+    setRequestsReceived(received);
+  } catch (err) {
+    console.error("Failed to fetch received requests:", err);
+  }
+}
+
 
   useEffect(() => {
     const fetchLoggedInUser = async () => {
@@ -151,6 +162,7 @@ export function UserProvider({ children }) {
     fetchLoggedInUser();
   }, []);
 
+  
   const value = {
     user,
     setUser,

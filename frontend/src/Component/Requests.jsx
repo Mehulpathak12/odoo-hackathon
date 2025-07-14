@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-// import {requestsSent, requestsRecieved} from "../Context/UserContent"
+import { useUser } from "../Context/UserContent";
 
 const Requests = ({
   show,
@@ -11,23 +11,47 @@ const Requests = ({
 }) => {
   const [activeTab, setActiveTab] = useState("received");
   const [actions, setActions] = useState({});
+  const { user } = useUser();
 
-  if (!show) return null;
+  if (!show || !user) return null;
 
-  const filteredRequests = requests.filter((r) => r.type === activeTab);
+  const filteredRequests = requests.filter((r) =>
+    activeTab === "sent"
+      ? r.requester.id === user.id
+      : r.target.id === user.id
+  );
+
   const paginatedRequests = filteredRequests.slice(
     (requestPage - 1) * requestsPerPage,
     requestPage * requestsPerPage
   );
 
-  const handleAction = (index, type) => {
-    setActions((prev) => ({
-      ...prev,
-      [index]: type,
-    }));
-    console.log(`${type} clicked for`, paginatedRequests[index]);
-    // TODO: Trigger backend API for Accept/Decline here
-  };
+const handleAction = async (index, type) => {
+  const globalIndex = (requestPage - 1) * requestsPerPage + index;
+  const req = paginatedRequests[index];
+
+  try {
+    const res = await fetch(`/api/swaps/${req._id}/respond`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: type }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      console.error("API Response Error:", result);
+      throw new Error("Failed to update request status");
+    }
+
+    setActions((prev) => ({ ...prev, [globalIndex]: type }));
+  } catch (err) {
+    console.error("Failed to update request:", err);
+  }
+};
+
+
 
   return (
     <div
@@ -49,37 +73,30 @@ const Requests = ({
           Swap Requests
         </h2>
 
+        {/* Tabs */}
         <div className="flex justify-center gap-4 mb-6">
-          <button
-            onClick={() => {
-              setActiveTab("received");
-              setRequestPage(1);
-            }}
-            className={`px-4 py-1 rounded-full text-sm font-medium ${
-              activeTab === "received"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Received
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("sent");
-              setRequestPage(1);
-            }}
-            className={`px-4 py-1 rounded-full text-sm font-medium ${
-              activeTab === "sent"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Sent
-          </button>
+          {["received", "sent"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setRequestPage(1);
+              }}
+              className={`px-4 py-1 rounded-full text-sm font-medium ${
+                activeTab === tab
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
         </div>
 
         {filteredRequests.length === 0 ? (
-          <p className="text-center text-gray-500">No {activeTab} requests found. Send Some?</p>
+          <p className="text-center text-gray-500">
+            No {activeTab} requests found.
+          </p>
         ) : (
           <>
             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -87,65 +104,72 @@ const Requests = ({
                 const globalIndex = (requestPage - 1) * requestsPerPage + i;
                 const action = actions[globalIndex];
 
+                const isSent = activeTab === "sent";
+                const userData = isSent ? req.target : req.requester;
+
                 return (
                   <div
-                    key={globalIndex}
+                    key={req._id}
                     className="border rounded-lg p-4 bg-gray-50 shadow-sm hover:shadow-md transition"
                   >
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-4">
                         <img
-                          src={req.photo}
+                          src={userData.photoUrl}
                           className="w-12 h-12 rounded-full border"
                           alt="user"
                         />
                         <div>
-                          <h3 className="font-semibold text-gray-800">{req.name}</h3>
-                          <p className="text-sm text-gray-600">Rating: {req.rating}</p>
+                          <h3 className="font-semibold text-gray-800">
+                            {userData.name}
+                          </h3>
+                          <p className="text-sm text-gray-600 capitalize">
+                            Status: {req.status}
+                          </p>
                         </div>
                       </div>
 
-                      {activeTab === "sent" && (
-                        <div className="text-right">
-                          <p className="font-medium text-gray-700">
-                            Status:{" "}
-                            <span
-                              className={
-                                req.status === "Accepted"
-                                  ? "text-green-600"
-                                  : req.status === "Rejected"
-                                  ? "text-red-500"
-                                  : "text-yellow-600"
-                              }
-                            >
-                              {req.status}
-                            </span>
-                          </p>
-                        </div>
+                      {isSent && (
+                        <p
+                          className={`font-medium text-sm ${
+                            req.status === "accepted"
+                              ? "text-green-600"
+                              : req.status === "rejected"
+                              ? "text-red-500"
+                              : "text-yellow-600"
+                          }`}
+                        >
+                          {req.status}
+                        </p>
                       )}
                     </div>
 
                     <div className="mt-3 text-sm text-gray-700">
                       <p>
-                        <strong>Skills Offered:</strong> {req.skillsOffered.join(", ")}
+                        <strong>Skill Offered:</strong> {req.skillOffered}
                       </p>
                       <p>
-                        <strong>Skills Wanted:</strong> {req.skillsWanted.join(", ")}
+                        <strong>Skill Requested:</strong> {req.skillRequested}
                       </p>
+                      {req.message && (
+                        <p>
+                          <strong>Message:</strong> {req.message}
+                        </p>
+                      )}
                     </div>
 
-                    {activeTab === "received" && (
+                    {!isSent && req.status === "pending" && (
                       <div className="mt-4 text-right">
                         {!action ? (
                           <div className="flex gap-3 justify-end">
                             <button
-                              onClick={() => handleAction(globalIndex, "Accepted")}
+                              onClick={() => handleAction(i, "accepted")}
                               className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
                             >
                               Accept
                             </button>
                             <button
-                              onClick={() => handleAction(globalIndex, "Declined")}
+                              onClick={() => handleAction(i, "rejected")}
                               className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
                             >
                               Decline
@@ -154,7 +178,9 @@ const Requests = ({
                         ) : (
                           <p
                             className={`font-medium mt-2 ${
-                              action === "Accepted" ? "text-green-600" : "text-red-500"
+                              action === "Accepted"
+                                ? "text-green-600"
+                                : "text-red-500"
                             }`}
                           >
                             Request {action.toLowerCase()}
@@ -166,6 +192,8 @@ const Requests = ({
                 );
               })}
             </div>
+
+            
             <div className="flex justify-center mt-6 space-x-2">
               {Array.from({
                 length: Math.ceil(filteredRequests.length / requestsPerPage),

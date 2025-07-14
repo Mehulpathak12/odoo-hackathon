@@ -11,16 +11,15 @@ export const Profile = () => {
     updateUser,
     uploadProfilePhoto,
     loading,
-    requestsSent,
-    requestsReceived,
   } = useUser();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showRequests, setShowRequests] = useState(false);
   const [requestPage, setRequestPage] = useState(1);
   const requestsPerPage = 3;
-
   const fileInputRef = useRef(null);
+
+  const [combinedRequests, setCombinedRequests] = useState([]);
 
   const [profile, setProfile] = useState({
     name: "",
@@ -33,7 +32,6 @@ export const Profile = () => {
     rating: "No Rating!",
     totalSwaps: 0,
   });
-  
 
   useEffect(() => {
     if (user) {
@@ -52,6 +50,39 @@ export const Profile = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (showRequests && user) {
+      fetchRequests();
+    }
+  }, [showRequests, user]);
+
+  const fetchRequests = async () => {
+    try {
+      const res = await fetch("/api/swaps", {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch swap requests");
+
+      const data = await res.json();
+      const swaps = data.swaps || [];
+console.log("Fetched swaps:", swaps);
+console.log("User ID:", user.id);
+
+      const received = swaps.filter((swap) => swap.target.id === user.id);
+      const sent = swaps.filter((swap) => swap.requester.id === user.id);
+
+      const combined = [
+        ...received.map((r) => ({ ...r, type: "received" })),
+        ...sent.map((r) => ({ ...r, type: "sent" })),
+      ];
+
+      setCombinedRequests(combined);
+    } catch (err) {
+      console.error("Error fetching swap requests:", err);
+    }
+  };
 
   const handleProfilePicUpload = async (event) => {
     const file = event.target.files[0];
@@ -115,16 +146,6 @@ export const Profile = () => {
       }));
     }
   };
-
-  const combinedRequests = [
-    ...requestsReceived.map((r) => ({ ...r, type: "received" })),
-    ...requestsSent.map((r) => ({ ...r, type: "sent" })),
-  ];
-
-  const paginatedRequests = combinedRequests.slice(
-    (requestPage - 1) * requestsPerPage,
-    requestPage * requestsPerPage
-  );
 
   if (loading || !user) {
     return (
@@ -195,149 +216,18 @@ export const Profile = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Name</label>
-            <input
-              type="text"
-              value={profile.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              className={`w-full border rounded-lg px-4 py-2 ${isEditing ? "bg-white" : "bg-gray-100"}`}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Location</label>
-            <input
-              type="text"
-              value={profile.location}
-              onChange={(e) => handleChange("location", e.target.value)}
-              className={`w-full border rounded-lg px-4 py-2 ${isEditing ? "bg-white" : "bg-gray-100"}`}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Rating</label>
-            <input
-              type="text"
-              value={profile.rating}
-              readOnly
-              className="w-full border rounded-lg px-4 py-2 bg-gray-100"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Total Swaps</label>
-            <input
-              type="text"
-              value={profile.totalSwaps}
-              readOnly
-              className="w-full border rounded-lg px-4 py-2 bg-gray-100"
-            />
-          </div>
+          <InputField label="Name" value={profile.name} onChange={(e) => handleChange("name", e.target.value)} isEditing={isEditing} />
+          <InputField label="Location" value={profile.location} onChange={(e) => handleChange("location", e.target.value)} isEditing={isEditing} />
+          <InputField label="Rating" value={profile.rating} isEditing={false} />
+          <InputField label="Total Swaps" value={profile.totalSwaps} isEditing={false} />
         </div>
 
-        {/* Skills Offered */}
-        <div className="mt-6">
-          <label className="block text-gray-700 font-medium mb-2">Skills Offered</label>
-          <div className="flex flex-wrap gap-3">
-            {profile.skillsOffered.map((skill, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-1 px-4 py-1 bg-blue-100 text-blue-800 text-sm rounded-full shadow-sm"
-              >
-                {skill}
-                {isEditing && (
-                  <button
-                    onClick={() => handleRemoveSkill("skillsOffered", i)}
-                    className="ml-1 text-red-500 hover:text-red-700 font-bold"
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
-            {isEditing && (
-              <button
-                onClick={() => handleAddSkill("skillsOffered")}
-                className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full shadow"
-              >
-                + Add Skill
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Skills Wanted */}
-        <div className="mt-6">
-          <label className="block text-gray-700 font-medium mb-2">Skills Wanted</label>
-          <div className="flex flex-wrap gap-3">
-            {profile.skillsWanted.map((skill, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-1 px-4 py-1 bg-orange-100 text-orange-800 text-sm rounded-full shadow-sm"
-              >
-                {skill}
-                {isEditing && (
-                  <button
-                    onClick={() => handleRemoveSkill("skillsWanted", i)}
-                    className="ml-1 text-red-500 hover:text-red-700 font-bold"
-                  >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
-            {isEditing && (
-              <button
-                onClick={() => handleAddSkill("skillsWanted")}
-                className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full shadow"
-              >
-                + Add Skill
-              </button>
-            )}
-          </div>
-        </div>
+        <SkillList title="Skills Offered" skills={profile.skillsOffered} isEditing={isEditing} onRemove={(i) => handleRemoveSkill("skillsOffered", i)} onAdd={() => handleAddSkill("skillsOffered")} />
+        <SkillList title="Skills Wanted" skills={profile.skillsWanted} isEditing={isEditing} onRemove={(i) => handleRemoveSkill("skillsWanted", i)} onAdd={() => handleAddSkill("skillsWanted")} />
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Availability</label>
-            {isEditing ? (
-              <select
-                value={profile.availability}
-                onChange={(e) => handleChange("availability", e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 bg-white"
-              >
-                <option value="Weekends">Weekends</option>
-                <option value="Weekdays">Weekdays</option>
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={profile.availability}
-                readOnly
-                className="w-full border rounded-lg px-4 py-2 bg-gray-100"
-              />
-            )}
-          </div>
-          <div>
-            <label className="block text-gray-700 font-medium mb-1">Profile Visibility</label>
-            {isEditing ? (
-              <select
-                value={profile.visibility}
-                onChange={(e) => handleChange("visibility", e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 bg-white"
-              >
-                <option value="Public">Public</option>
-                <option value="Private">Private</option>
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={profile.visibility}
-                readOnly
-                className="w-full border rounded-lg px-4 py-2 bg-gray-100"
-              />
-            )}
-          </div>
+          <SelectField label="Availability" value={profile.availability} onChange={(val) => handleChange("availability", val)} isEditing={isEditing} options={["Weekends", "Weekdays"]} />
+          <SelectField label="Profile Visibility" value={profile.visibility} onChange={(val) => handleChange("visibility", val)} isEditing={isEditing} options={["Public", "Private"]} />
         </div>
       </motion.div>
 
@@ -345,7 +235,6 @@ export const Profile = () => {
         show={showRequests}
         onClose={() => setShowRequests(false)}
         requests={combinedRequests}
-        paginatedRequests={paginatedRequests}
         requestPage={requestPage}
         setRequestPage={setRequestPage}
         requestsPerPage={requestsPerPage}
@@ -353,3 +242,53 @@ export const Profile = () => {
     </div>
   );
 };
+
+// Reusable input field
+const InputField = ({ label, value, onChange, isEditing }) => (
+  <div>
+    <label className="block text-gray-700 font-medium mb-1">{label}</label>
+    <input
+      type="text"
+      value={value}
+      onChange={onChange}
+      readOnly={!isEditing}
+      className={`w-full border rounded-lg px-4 py-2 ${isEditing ? "bg-white" : "bg-gray-100"}`}
+    />
+  </div>
+);
+
+const SelectField = ({ label, value, onChange, isEditing, options }) => (
+  <div>
+    <label className="block text-gray-700 font-medium mb-1">{label}</label>
+    {isEditing ? (
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full border rounded-lg px-4 py-2 bg-white">
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    ) : (
+      <input value={value} readOnly className="w-full border rounded-lg px-4 py-2 bg-gray-100" />
+    )}
+  </div>
+);
+
+const SkillList = ({ title, skills, isEditing, onRemove, onAdd }) => (
+  <div className="mt-6">
+    <label className="block text-gray-700 font-medium mb-2">{title}</label>
+    <div className="flex flex-wrap gap-3">
+      {skills.map((skill, i) => (
+        <span key={i} className="flex items-center gap-1 px-4 py-1 bg-blue-100 text-blue-800 text-sm rounded-full shadow-sm">
+          {skill}
+          {isEditing && (
+            <button onClick={() => onRemove(i)} className="ml-1 text-red-500 hover:text-red-700 font-bold">×</button>
+          )}
+        </span>
+      ))}
+      {isEditing && (
+        <button onClick={onAdd} className="px-3 py-1 bg-indigo-100 text-indigo-800 text-sm rounded-full shadow">+ Add Skill</button>
+      )}
+    </div>
+  </div>
+);
