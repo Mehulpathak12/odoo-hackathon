@@ -16,8 +16,9 @@ app.use(cors({
     credentials: true
 }))
 
-const {home, auth} = require('./routes/index')
+const {home, auth, swaps} = require('./routes/index')
 app.use(home)
 app.use("/api",auth)
+app.use("/api",swaps)
 
 module.exports =  app

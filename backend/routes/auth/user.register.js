@@ -278,7 +278,24 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
 })
 router.get('/users/public', async (req, res) => {
   try {
-    const users = await User.find({ isPublic: true }).select(
+    let currentUserId = null;
+
+    const token = req.cookies.token; // Get token from cookie
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        currentUserId = decoded.id; // or decoded._id depending on how you create the token
+      } catch (err) {
+        console.warn('Invalid token in cookie');
+      }
+    }
+
+    const query = { isPublic: true };
+    if (currentUserId) {
+      query._id = { $ne: currentUserId };
+    }
+
+    const users = await User.find(query).select(
       'name location skillsOffered skillsWanted availability photoUrl _id ratings'
     );
 
@@ -290,7 +307,7 @@ router.get('/users/public', async (req, res) => {
       skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
       skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
       availability: user.availability || ['Not mentioned'],
-      ratings: users.ratings ? users.ratings : "NULL",
+      ratings: Array.isArray(user.ratings) && user.ratings.length > 0 ? user.ratings : "NaN",
       profileUrl: `/api/users/${user._id}`,
     }));
 
@@ -300,6 +317,7 @@ router.get('/users/public', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch public users' });
   }
 });
+
 // New: Get individual public profile
 router.get('/users/:id', async (req, res) => {
   try {
