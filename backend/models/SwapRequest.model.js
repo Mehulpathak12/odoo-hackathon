@@ -13,12 +13,7 @@ const SwapRequestSchema = new mongoose.Schema({
     default: 'pending' 
     },
   
-    // after swap, either user can leave feedback
-    feedback: {
-      from:         { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      rating:       { type: Number, min: 1, max: 5 },
-      comment:      { type: String }
-    }
+    message:{type : String}
   
   }, { timestamps: true });
   
