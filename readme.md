@@ -55,6 +55,7 @@ Instead of money, users trade knowledge — offering one skill while requesting 
 |-------------|-------------------|
 | Frontend    | React.js, TailwindCSS |
 | State Mgmt  | Context API        |
+| Backend    | Node.js, Express |
 
 ---
 

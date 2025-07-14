@@ -212,7 +212,7 @@ router.put('/auth/profile', authMiddleware, async (req, res) => {
         availability: user.availability,
         isPublic: user.isPublic,
         photoUrl: user.photoUrl,
-        profileUrl: `/api/users/${user._id}`
+        profileUrl: `/api/users/${user._id}`,
       }
     });
   } catch (err) {
@@ -268,10 +268,10 @@ router.get('/auth/profile', authMiddleware, async (req, res) => {
         photoUrl: user.photoUrl,
         ratings: Array.isArray(user.ratings) && user.ratings.length > 0 ? user.ratings : "No Rating!",
         totalSwaps: 0,
-        profileUrl: `/api/users/${user._id}`
+        profileUrl: `/api/users/${user._id}`,
       } 
     });
-  } catch (err) {
+  } catch(err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Fetch failed' });
   }
@@ -291,7 +291,7 @@ router.get('/users/public', async (req, res) => {
       skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
       availability: user.availability || ['Not mentioned'],
       ratings: users.ratings ? users.ratings : "NULL",
-      profileUrl: `/api/users/${user._id}`
+      profileUrl: `/api/users/${user._id}`,
     }));
 
     res.json({ success: true, users: formatted });
@@ -318,7 +318,7 @@ router.get('/users/:id', async (req, res) => {
         skillsOffered: user.skillsOffered.length ? user.skillsOffered : ['No skills offered'],
         skillsWanted: user.skillsWanted.length ? user.skillsWanted : ['No skills wanted'],
         availability: user.availability || ['Not mentioned'],
-        profileUrl: `/users/${user._id}`
+        profileUrl: `/api/users/${user._id}`,
       }
     });
   } catch (err) {
