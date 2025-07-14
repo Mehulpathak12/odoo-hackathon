@@ -81,7 +81,7 @@ This platform is designed to **scale into an Odoo module** or integrate with Odo
 
 - ✅ Notification system for requests
 - 🔐 Authentication + role management
-- 🛠️ Full backend integration (Appwrite or Odoo APIs)
+- 🛠️ Full backend integration
 - 🌍 Geo-filtering and language preferences
 - 📊 Admin dashboard with analytics
 
