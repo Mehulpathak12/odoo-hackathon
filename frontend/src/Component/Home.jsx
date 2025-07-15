@@ -101,9 +101,18 @@ export const Home = () => {
         <div className="relative bg-gradient-to-r from-white to-blue-50 py-20 px-6 sm:px-12 lg:px-24 text-center">
           <div className="absolute top-6 right-6 flex gap-4">
             
-            <button onClick={prof} className="px-4 mr-5 py-2 bg-amber-400 text-white rounded-lg shadow-md hover:bg-amber-500 transition">
-              View Profile
-            </button>
+            <button
+            onClick={prof}
+            className="flex items-center gap-2 px-5 py-2 bg-white text-indigo-600 border border-indigo-500 rounded-full shadow-sm hover:bg-indigo-50 hover:shadow-md transition-all duration-200 font-medium"
+          >
+            <img
+              src={user?.photoUrl || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
+              alt="Profile"
+              className="w-6 h-6 rounded-full border border-gray-300"
+            />
+            <span>My Profile</span>
+          </button>
+
           </div>
 
           <h2 className="text-4xl font-bold text-gray-800 mb-6">Welcome back, {user?.name || "Learner"} 👋</h2>
